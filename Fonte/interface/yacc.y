@@ -150,11 +150,21 @@ create_database: CREATE DATABASE {setMode(OP_CREATE_DATABASE);} OBJECT {setObjNa
 drop_database: DROP DATABASE {setMode(OP_DROP_DATABASE);} OBJECT {setObjName(yytext);} semicolon {return 0;};
 
 /* SELECT */
+<<<<<<< HEAD
 select: SELECT {setMode(OP_SELECT_ALL);} column_list_projection FROM table_select semicolon {return 0;};
 
 table_select: OBJECT {setObjName(yytext);};
 
 column_list_projection: '*' | column | column ',' column_list_projection;
+=======
+select: SELECT {setMode(OP_SELECT_ALL);} column_list FROM table_select /*optional*/|WHERE semicolon {return 0;};
+
+table_select: OBJECT {setObjName(yytext);};
+
+column_list: '*' | column ',' column_list;
+
+column: OBJECT {setColumnInsert(yytext);};
+>>>>>>> 25b4c5ee4dadb1b67634670b9ef41d1f3ea3c890
 
 /* END */
 %%
