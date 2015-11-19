@@ -32,6 +32,7 @@ help							return HELP;
 [\\][h]+[^\n]*					{invalidCommand(yytext);};
 [\\][\?]						return HELP;
 (?i:CLEAR)						return CLEAR;
+(?i:WHERE)						return WHERE;
 
 [,]								return *yytext;
 [;]								return *yytext;

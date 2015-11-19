@@ -219,7 +219,7 @@ int interface() {
                                 printf("WARNING: Nothing to be inserted. Command ignored.\n");
                             break;
                         case OP_SELECT_ALL:
-                            imprime(GLOBAL_DATA.objName);
+                            imprime(&GLOBAL_DATA);
                             break;
                         case OP_CREATE_TABLE:
                             createTable(&GLOBAL_DATA);

@@ -71,7 +71,10 @@ extern int yydebug;
     CONNECT = 281,
     HELP = 282,
     LIST_DBASES = 283,
-    CLEAR = 284
+    CLEAR = 284,
+    WHERE = 285,
+    AND = 286,
+    OR = 287
   };
 #endif
 /* Tokens.  */
@@ -102,6 +105,9 @@ extern int yydebug;
 #define HELP 282
 #define LIST_DBASES 283
 #define CLEAR 284
+#define WHERE 285
+#define AND 286
+#define OR 287
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -115,7 +121,7 @@ union YYSTYPE
     int subtok;
     char *strval;
 
-#line 119 "y.tab.h" /* yacc.c:1909  */
+#line 125 "y.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
