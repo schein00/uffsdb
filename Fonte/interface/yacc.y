@@ -150,9 +150,13 @@ create_database: CREATE DATABASE {setMode(OP_CREATE_DATABASE);} OBJECT {setObjNa
 drop_database: DROP DATABASE {setMode(OP_DROP_DATABASE);} OBJECT {setObjName(yytext);} semicolon {return 0;};
 
 /* SELECT */
-select: SELECT {setMode(OP_SELECT_ALL);} '*' FROM table_select semicolon {return 0;};
+select: SELECT {setMode(OP_SELECT_ALL);} column_list FROM table_select /*optional*/|WHERE semicolon {return 0;};
 
 table_select: OBJECT {setObjName(yytext);};
+
+column_list: '*' | column ',' column_list;
+
+column: OBJECT {setColumnInsert(yytext);};
 
 /* END */
 %%

@@ -7,17 +7,17 @@
     Retorno:    void.
    ---------------------------------------------------------------------------------------------*/
 
-void imprime(char nomeTabela[]) {
+void imprime(rc_insert *GLOBAL_DATA) {
 
     int j,erro, x, p, cont=0;
     struct fs_objects objeto;
 
-    if(!verificaNomeTabela(nomeTabela)){
-        printf("\nERROR: relation \"%s\" was not found.\n\n\n", nomeTabela);
+    if(!verificaNomeTabela(GLOBAL_DATA->objName)){
+        printf("\nERROR: relation \"%s\" was not found.\n\n\n", GLOBAL_DATA->objName);
         return;
     }
 
-    objeto = leObjeto(nomeTabela);
+    objeto = leObjeto(GLOBAL_DATA->objName);
 
     tp_table *esquema = leSchema(objeto);
 
