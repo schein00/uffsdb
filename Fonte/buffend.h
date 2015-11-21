@@ -51,6 +51,16 @@ typedef struct tp_buffer{ // Estrutura utilizada para armazenar o buffer.
    unsigned int position;   // Próxima posição válida na página.
 }tp_buffer;
 
+typedef struct rc_select{
+ char *nameSelect; //Nome da tabela do select
+ char **columnName; //colunas da tabela
+ char *op; // operação 
+ char **nameTeste; // colunas para o where
+ char *values; // valor para o where	
+ char *andd; // se existe and's
+ char *orr; // se existe or's
+}rc_select;
+
 typedef struct rc_insert {
     char    *objName;           // Nome do objeto (tabela, banco de dados, etc...)
     char   **columnName;        // Colunas da tabela
