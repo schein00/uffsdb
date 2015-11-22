@@ -52,13 +52,12 @@ typedef struct tp_buffer{ // Estrutura utilizada para armazenar o buffer.
 }tp_buffer;
 
 typedef struct rc_select{
- char *nameSelect; //Nome da tabela do select
- char **columnName; //colunas da tabela
- char *op; // operação 
- char **nameTeste; // colunas para o where
- char *values; // valor para o where	
- char *andd; // se existe and's
- char *orr; // se existe or's
+ char 	*objName; 	//Nome da tabela do select
+ char 	**columnName; 	//colunas da tabela para projecao
+ char 	**op; 		// operação 
+ char 	**nameTeste; 	// colunas para o where
+ char 	**values; 		// valor para o where	
+ char 	**andOr; 		// se existe and's ou or's, e gravado na ordem para que os testes devem ser feitos;
 }rc_select;
 
 typedef struct rc_insert {
@@ -73,13 +72,17 @@ typedef struct rc_insert {
 }rc_insert;
 
 typedef struct rc_parser {
-    int         mode;           // Modo de operação (definido em /interface/parser.h)
-    int         parentesis;     // Contador de parenteses abertos
-    int         step;           // Passo atual (token)
-    int         noerror;        // Nenhum erro encontrado na identificação dos tokens
-    int         col_count;      // Contador de colunas
-    int         val_count;      // Contador de valores
-    int         consoleFlag;   // Auxiliar para não imprimir duas vezes nome=#
+	int 		mode;           	// Modo de operação (definido em /interface/parser.h)
+	int 		parentesis;     	// Contador de parenteses abertos
+	int 		step;           	// Passo atual (token)
+	int 		noerror;        	// Nenhum erro encontrado na identificação dos tokens
+	int 		col_count;      	// Contador de colunas
+	int 		val_count;     	// Contador de valores
+	int 		consoleFlag;   	// Auxiliar para não imprimir duas vezes nome=#
+	int		test_count;		// Contador de testes (and ou or)
+	int 		col_test_count;	// Contador de quantia de colunas para testes
+	int 		op_test_count;		// Contador de operadores para testes
+	int 		val_teste_count;	// Contador de valores para testes
 }rc_parser;
 
 typedef struct data_base {
