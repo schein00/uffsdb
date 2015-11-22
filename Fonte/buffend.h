@@ -166,7 +166,12 @@ int tamTupla(tp_table *esquema, struct fs_objects objeto);
 
 /************************************************************************************************
  ************************************************************************************************/
-
+int verificaWhere(rc_select *GLOBAL_SELECT, tp_buffer *buffer, int page, int i);
+/*
+   //Verifica as condições do where, se acaso estiver correto, retorna 1 
+*/
+/************************************************************************************************
+ ************************************************************************************************/
 int printbufferpoll(tp_buffer *buffpoll, tp_table *s,struct fs_objects objeto, int num_page);
 /*
     Esta função imprime todos os dados carregados numa determinada página do buffer
