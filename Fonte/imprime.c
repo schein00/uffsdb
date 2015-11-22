@@ -7,7 +7,7 @@
     Retorno:    void.
    ---------------------------------------------------------------------------------------------*/
 
-void imprime(rc_insert *GLOBAL_DATA,rc_select *GLOBAL_SELECT) {
+void imprime(rc_insert *GLOBAL_DATA,rc_select *GLOBAL_DATA_SELECT) {
 	
     int j,erro, x, p, cont=0;
     struct fs_objects objeto;
@@ -46,7 +46,7 @@ void imprime(rc_insert *GLOBAL_DATA,rc_select *GLOBAL_SELECT) {
 	while(x){
 	//aqui deve ser carregado as tuplas com as clasulas do where passar o rc select pra carregar a pagina
 	//creio que seja a melhor forma pois ai só tera as tuplas das projeções e não precisa mexer drasticamente a função imprime, pois para baixo é apenas printfs
-	    column *pagina = getPage(bufferpoll, esquema, objeto, p);
+	    column *pagina = getPage(bufferpoll, esquema, objeto, p, &GLOBAL_DATA_SELECT);
 
 	    if(pagina == ERRO_PARAMETRO){
             printf("ERROR: could not open the table.\n");

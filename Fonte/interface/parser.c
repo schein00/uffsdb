@@ -9,7 +9,7 @@
  
 rc_insert GLOBAL_DATA;
 
-rc_select GLOBAL_SELECT;
+rc_select GLOBAL_DATA_SELECT;
 /* Estrutura auxiliar do reconhecedor.
  */
 rc_parser GLOBAL_PARSER;
