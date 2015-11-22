@@ -6,7 +6,9 @@
 /* Estrutura global que guarda as informações obtidas pelo yacc
  * na identificação dos tokens
  */
+ 
 rc_insert GLOBAL_DATA;
+
 rc_select GLOBAL_SELECT;
 /* Estrutura auxiliar do reconhecedor.
  */
@@ -293,3 +295,69 @@ void yyerror(char *s, ...) {
     fprintf(stderr, "\n");
     */
 }
+
+
+
+void setObjNameSelect(char **name) {
+	if (GLOBAL_PARSER.mode != 0) {
+		GLOBAL_DATA_SELECT.objName = malloc(sizeof(char)*((strlen(*name)+1)));
+		strcpylower(GLOBAL_DATA_SELECT.objName, *name);
+		GLOBAL_DATA_SELECT.objName[strlen(*name)] = '\0';
+		GLOBAL_PARSER.step++;
+	} else {
+		return;
+	}
+}
+
+void setColumnProjection(char **name) {
+	GLOBAL_DATA_SELECT.columnName = realloc(GLOBAL_DATA_SELECT.columnName, (GLOBAL_PARSER.col_count+1)*sizeof(char *));
+
+	GLOBAL_DATA_SELECT.columnName[GLOBAL_PARSER.col_count] = malloc(sizeof(char)*(strlen(*name)+1));
+	strcpylower(GLOBAL_DATA_SELECT.columnName[GLOBAL_PARSER.col_count], *name);
+	GLOBAL_DATA_SELECT.columnName[GLOBAL_PARSER.col_count][strlen(*name)] = '\0';
+
+	GLOBAL_PARSER.col_count++;
+}
+
+void setOp(char **name){
+	GLOBAL_DATA_SELECT.op = realloc(GLOBAL_DATA_SELECT.op, (GLOBAL_PARSER.op_test_count+1)*sizeof(char *));
+
+	GLOBAL_DATA_SELECT.op[GLOBAL_PARSER.op_test_count] = malloc(sizeof(char)*(strlen(*name)+1));
+	strcpylower(GLOBAL_DATA_SELECT.op[GLOBAL_PARSER.op_test_count], *name);
+	GLOBAL_DATA_SELECT.op[GLOBAL_PARSER.op_test_count][strlen(*name)] = '\0';
+
+	GLOBAL_PARSER.op_test_count++;
+}
+
+void setColumnTest(char **name){
+
+	GLOBAL_DATA_SELECT.nameTeste = realloc(GLOBAL_DATA_SELECT.nameTeste, (GLOBAL_PARSER.col_test_count+1)*sizeof(char *));
+
+	GLOBAL_DATA_SELECT.nameTeste[GLOBAL_PARSER.col_test_count] = malloc(sizeof(char)*(strlen(*name)+1));
+	strcpylower(GLOBAL_DATA_SELECT.nameTeste[GLOBAL_PARSER.col_test_count], *name);
+	GLOBAL_DATA_SELECT.nameTeste[GLOBAL_PARSER.col_test_count][strlen(*name)] = '\0';
+
+	GLOBAL_PARSER.col_test_count++;
+}
+
+void setValueTest(char **value){
+	GLOBAL_DATA_SELECT.values = realloc(GLOBAL_DATA_SELECT.values, (GLOBAL_PARSER.val_teste_count+1)*sizeof(char *));
+
+	GLOBAL_DATA_SELECT.values[GLOBAL_PARSER.val_teste_count] = malloc(sizeof(char)*(strlen(*value)+1));
+	strcpylower(GLOBAL_DATA_SELECT.values[GLOBAL_PARSER.val_teste_count], *value);
+	GLOBAL_DATA_SELECT.values[GLOBAL_PARSER.val_teste_count][strlen(*value)] = '\0';
+
+	GLOBAL_PARSER.val_teste_count++;
+}
+
+void setAndOR(char **clausule){
+	GLOBAL_DATA_SELECT.andOr = realloc(GLOBAL_DATA_SELECT.andOr, (GLOBAL_PARSER.test_count+1)*sizeof(char *));
+
+	GLOBAL_DATA_SELECT.andOr[GLOBAL_PARSER.test_count] = malloc(sizeof(char)*(strlen(*clausule)+1));
+	strcpylower(GLOBAL_DATA_SELECT.andOr[GLOBAL_PARSER.test_count], *clausule);
+	GLOBAL_DATA_SELECT.andOr[GLOBAL_PARSER.test_count][strlen(*clausule)] = '\0';
+
+	GLOBAL_PARSER.test_count++;
+
+}
+
