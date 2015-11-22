@@ -150,21 +150,27 @@ create_database: CREATE DATABASE {setMode(OP_CREATE_DATABASE);} OBJECT {setObjNa
 drop_database: DROP DATABASE {setMode(OP_DROP_DATABASE);} OBJECT {setObjName(yytext);} semicolon {return 0;};
 
 /* SELECT */
-<<<<<<< HEAD
-select: SELECT {setMode(OP_SELECT_ALL);} column_list_projection FROM table_select semicolon {return 0;};
+select: SELECT {setMode(OP_SELECT_ALL);} column_list_select FROM table_select clause_where test_list semicolon {return 0;};
 
 table_select: OBJECT {setObjName(yytext);};
 
-column_list_projection: '*' | column | column ',' column_list_projection;
-=======
-select: SELECT {setMode(OP_SELECT_ALL);} column_list FROM table_select /*optional*/|WHERE semicolon {return 0;};
+column_list_select: '*' | column_projection | column_projection ',' column_list_select;
 
-table_select: OBJECT {setObjName(yytext);};
+column_projection: OBJECT {setColumnProjection(yytext);};
 
-column_list: '*' | column ',' column_list;
+clause_where: /*optional*/| WHERE;
 
-column: OBJECT {setColumnInsert(yytext);};
->>>>>>> 25b4c5ee4dadb1b67634670b9ef41d1f3ea3c890
+test_list: /*optional*/ | test | test and_or test_list;
+
+and_or: OBJECT {setAndOR(yytext);};
+
+test: column_test operator value_test;
+
+column_test: OBJECT {setColumnTest(yytext);};
+
+operator: OBJECT {setOp(yytext);};
+
+value_test: OBJECT {setValueTest(yytext);};
 
 /* END */
 %%
