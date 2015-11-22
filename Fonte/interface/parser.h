@@ -15,6 +15,12 @@
  */
 extern rc_insert GLOBAL_DATA;
 
+/*
+* Estrutura global que guarda as informacoes obtidas pelo yacc
+* na identificacao dos tokens para select
+*/
+extern rc_select GLOBAL_DATA_SELECT;
+
 /* Estrutura auxiliar do reconhecedor.
  */
 extern rc_parser GLOBAL_PARSER;
@@ -101,3 +107,34 @@ void clearGlobalStructs();
  * dos tokens iniciais.
  */
 void setMode(char mode);
+
+/*
+  Define o nome da tabela para qual foi usado o select
+*/
+void setObjNameSelect(char **name);
+
+/*
+ Define quais as colunas devem ser projetadas
+*/
+void setColumnProjection(char **name);
+
+/*
+  Define qual a operacao que deve ser feita
+*/
+void setOp(char **name);
+
+/*
+ Define com qual a coluna sera feito os testes
+*/
+void setColumnTest(char **name);
+
+/*
+ Define qual o valor deve ser comparado com a coluna
+*/
+void setValueTest(char **value);
+
+/*
+ Define se existe or ou and, sendo que grava em ordem, ou seja,
+ se tiver um and na 1 posicao, entao (coluna 1, operacao 1, valor 1) and (coluna 2, operacao 2, valor 2) 
+*/
+void setAndOR(char **clausule);
