@@ -7,11 +7,11 @@
     Retorno:    void.
    ---------------------------------------------------------------------------------------------*/
 
-void imprime(rc_insert *GLOBAL_DATA) {
-
+void imprime(rc_insert *GLOBAL_DATA,rc_select *GLOBAL_SELECT) {
+	
     int j,erro, x, p, cont=0;
     struct fs_objects objeto;
-
+	
     if(!verificaNomeTabela(GLOBAL_DATA->objName)){
         printf("\nERROR: relation \"%s\" was not found.\n\n\n", GLOBAL_DATA->objName);
         return;
@@ -38,12 +38,16 @@ void imprime(rc_insert *GLOBAL_DATA) {
 
     erro = SUCCESS;
     for(x = 0; erro == SUCCESS; x++)
+
         erro = colocaTuplaBuffer(bufferpoll, x, esquema, objeto);
 
     int ntuples = --x;
 	p = 0;
 	while(x){
+	//aqui deve ser carregado as tuplas com as clasulas do where passar o rc select pra carregar a pagina
+	//creio que seja a melhor forma pois ai só tera as tuplas das projeções e não precisa mexer drasticamente a função imprime, pois para baixo é apenas printfs
 	    column *pagina = getPage(bufferpoll, esquema, objeto, p);
+
 	    if(pagina == ERRO_PARAMETRO){
             printf("ERROR: could not open the table.\n");
             free(bufferpoll);

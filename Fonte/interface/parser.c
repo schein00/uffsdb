@@ -7,7 +7,7 @@
  * na identificação dos tokens
  */
 rc_insert GLOBAL_DATA;
-
+rc_select GLOBAL_SELECT;
 /* Estrutura auxiliar do reconhecedor.
  */
 rc_parser GLOBAL_PARSER;
@@ -219,7 +219,8 @@ int interface() {
                                 printf("WARNING: Nothing to be inserted. Command ignored.\n");
                             break;
                         case OP_SELECT_ALL:
-                            imprime(&GLOBAL_DATA);
+			    
+                            imprime(&GLOBAL_DATA,&GLOBAL_SELECT);
                             break;
                         case OP_CREATE_TABLE:
                             createTable(&GLOBAL_DATA);
