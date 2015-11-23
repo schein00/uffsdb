@@ -222,7 +222,7 @@ int interface() {
                             break;
                         case OP_SELECT_ALL:
 			    
-                            imprime(&GLOBAL_DATA,&GLOBAL_DATA_SELECT,&GLOBAL_PARSER);
+                            imprime(&GLOBAL_DATA,&GLOBAL_SELECT);
                             break;
                         case OP_CREATE_TABLE:
                             createTable(&GLOBAL_DATA);

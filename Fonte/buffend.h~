@@ -166,7 +166,7 @@ int tamTupla(tp_table *esquema, struct fs_objects objeto);
 
 /************************************************************************************************
  ************************************************************************************************/
-int verificaWhere(rc_select *GLOBAL_SELECT, tp_buffer *buffer, int page, int i);
+int verificaWhere(rc_select *GLOBAL_SELECT, tp_buffer *buffer, int page, int i, int j);
 /*
    Verifica as condições do where, se acaso estiver correto, retorna 1 
 */

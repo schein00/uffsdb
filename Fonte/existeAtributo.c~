@@ -25,10 +25,10 @@ int existeAtributo(char *nomeTabela, column *c){
     for(x = 0; erro == SUCCESS; x++)
         erro = colocaTuplaBuffer(bufferpoll, x, tabela, objeto);
 
-    pagina = getPage(bufferpoll, tabela, objeto, 0);
+    pagina = getPage(bufferpoll, tabela, objeto, 0,NULL,NULL);
 	//VERIFICAR SE ISSO IRA FUNCIONAR 
     if(pagina == NULL){
-        pagina = getPage(bufferpoll, tabela, objeto, 1);
+        pagina = getPage(bufferpoll, tabela, objeto, 1,NULL,NULL);
     }
 
     if(pagina != NULL){
