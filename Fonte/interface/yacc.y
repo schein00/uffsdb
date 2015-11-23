@@ -152,7 +152,7 @@ drop_database: DROP DATABASE {setMode(OP_DROP_DATABASE);} OBJECT {setObjName(yyt
 /* SELECT */
 select: SELECT {setMode(OP_SELECT_ALL);} column_list_select FROM table_select clause_where test_list semicolon {return 0;};
 
-table_select: OBJECT {setObjName(yytext);};
+table_select: OBJECT {setObjNameSelect(yytext);};
 
 column_list_select: '*' | column_projection | column_projection ',' column_list_select;
 
