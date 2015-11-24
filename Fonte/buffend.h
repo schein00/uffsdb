@@ -328,7 +328,7 @@ column * excluirTuplaBuffer(tp_buffer *buffer, tp_table *campos, struct fs_objec
 /************************************************************************************************
 /  Natan J. Mai, Ricardo Zanuzzo e Rogério Torchelsen                                          */
 
-void imprime(rc_insert *GLOBAL_DATA,rc_select *GLOBAL_SELECT,rc_parser *GLOBAL_PARSER );
+void imprime(rc_select *GLOBAL_DATA,rc_parser *GLOBAL_PARSER );
 /* ----------------------------------------------------------------------------------------------
     Objetivo:   Utilizada para impressão de tabelas.
     Parametros: Nome da tabela (char).
