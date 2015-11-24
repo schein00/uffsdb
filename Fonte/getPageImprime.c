@@ -14,8 +14,13 @@ column * getPageImprime(tp_buffer *buffer, tp_table *campos, struct fs_objects o
 	
 
  char c = '*';
+ char *auxc;
+ auxc = &c;
+ char *f;
+strcpy(f,*GLOBAL_DATA_SELECT->columnName);
+
  
-    if( objcmp(GLOBAL_DATA_SELECT->columnName,c) == 0){
+    if( objcmp(f,auxc) == 0){
 	 GLOBAL_PARSER->col_count = objeto.qtdCampos; 
 		return ERRO_DE_ALOCACAO;
 	}

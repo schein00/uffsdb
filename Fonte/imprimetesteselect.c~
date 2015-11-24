@@ -1,0 +1,7 @@
+#include "buffend.h"
+void imprimetesteselect(rc_select *GLOBAL_DATA_SELECT){
+	int i;
+	for (i=0; i<10; i++){ 
+	 printf("%s",&(*GLOBAL_DATA_SELECT)->columnName);
+	}
+}

@@ -53,7 +53,7 @@ typedef struct tp_buffer{ // Estrutura utilizada para armazenar o buffer.
 
 typedef struct rc_select{
  char 	*objName; 	//Nome da tabela do select
- char 	**columnName; 	//colunas da tabela para projecao
+ char 	*columnName; 	//colunas da tabela para projecao
  char 	**op; 		// operação 
  char 	**nameTeste; 	// colunas para o where
  char 	**values; 		// valor para o where	
@@ -166,7 +166,7 @@ int tamTupla(tp_table *esquema, struct fs_objects objeto);
 
 /************************************************************************************************
  ************************************************************************************************/
-int verificaWhere(rc_select *GLOBAL_SELECT, tp_buffer *buffer, int page, int i, int j);
+int verificaWhere(rc_select *GLOBAL_SELECT, tp_buffer *buffer, int page, int i);
 /*
    Verifica as condições do where, se acaso estiver correto, retorna 1 
 */
