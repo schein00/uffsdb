@@ -13,21 +13,9 @@ column * getPageImprime(tp_buffer *buffer, tp_table *campos, struct fs_objects o
 	//Para melhorar essa logica, adicionei um campo qtdcampos na struct, pode ser usado para refatorar o codigo mais tarde precisa saber como iremos preencher essa variavel quando não tiver '*'
 	
 
- char c = '*';
- char *auxc;
- auxc = &c;
- char *f;
-strcpy(f,*GLOBAL_DATA_SELECT->columnName);
-
- 
-    if( objcmp(f,auxc) == 0){
-	 GLOBAL_PARSER->col_count = objeto.qtdCampos; 
-		return ERRO_DE_ALOCACAO;
-	}
-
 	//Aloca a quantidade de campos necessária
     	column *colunas = (column *)malloc(sizeof(column)*GLOBAL_PARSER->col_count *(buffer[page].nrec)); 
-
+/*
 
     	if(!colunas){
        	 return ERRO_DE_ALOCACAO; 
@@ -42,40 +30,21 @@ strcpy(f,*GLOBAL_DATA_SELECT->columnName);
     
 
     int i=0, j=0, t=0, h=0;
-    
-    if (!buffer[page].position)
-        return colunas;
+    char c = "NOME";
+    char *f = NULL;
+	f= &c;
+    rc_select *aux= NULL;
+   
+   if(objcmp(GLOBAL_DATA_SELECT->columnName,f) == 1){
 
-    while(i < buffer[page].position){
-        t=0;
-        
-	if(j >= GLOBAL_PARSER->col_count) j=0;
-	
-	if(GLOBAL_DATA_SELECT->columnName == campos[j].nome){
-        colunas[h].valorCampo = (char *)malloc(sizeof(char)*campos[j].tam+1);
-        memset(colunas[h].valorCampo, '\0', campos[j].tam+1);
-        colunas[h].tipoCampo = campos[j].tipo;  //Guarda tipo do campo
-	
-        strcpy(colunas[h].nomeCampo, campos[j].nome); //Guarda nome do campo
-	
-	//em desenvolvimento
-        while(t < campos[j].tam){
-		//if(GLOBAL_DATA_SELECT->andOr == 'AND') 
-		
-		
-		if(GLOBAL_DATA_SELECT->nameTeste == campos[j].nome){
-			if(verificaWhere(GLOBAL_DATA_SELECT,buffer,page,i) == 1)   
-				 colunas[h].valorCampo[t] = buffer[page].data[i]; //Copia os dados
-		}
-            t++;
-            i++;
-        }
-        colunas[h].valorCampo[t] = '\0';
+ printf("k");
+
 	}
-        h++;
-        j++;
-    
-}
+
+*/
+
+	
+   
     return colunas; //Retorna a 'page' do buffer
 
 

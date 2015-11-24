@@ -12,7 +12,7 @@ int objcmp(char *obj, char *str) {
 	memset(string, '\0', TAMANHO_NOME_CAMPO);
 
 	for (i = 0; i < strlen(obj); i++)
-		object[i] = tolower(obj[i]);	
+		object[i] = tolower(obj[i]);	printf("%s",object[i]);
 	object[i] = '\0';
 
 	for (i = 0; i < strlen(str); i++)
