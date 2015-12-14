@@ -2,17 +2,33 @@
 #include <pthread.h>
 #include "../buffend.h"
 #include "parser.h"
+#include <string.h>
+
 
 /* Estrutura global que guarda as informações obtidas pelo yacc
  * na identificação dos tokens
  */
- 
 rc_insert GLOBAL_DATA;
 
-rc_select GLOBAL_DATA_SELECT;
 /* Estrutura auxiliar do reconhecedor.
  */
 rc_parser GLOBAL_PARSER;
+
+/**
+ * Estrutura auxiliar do select.
+ */
+qr_select GLOBAL_SELECT;
+
+/**
+ * Estrutura auxiliar do atual 'where'
+ */
+qr_filter *TEMP_FILTER;
+int       TEMP_FILTER_POSITION;
+
+/**
+ * Estrutura auxiliar do atual 'join'
+ */
+qr_join   *TEMP_JOIN;
 
 void connect(char *nome) {
     int r;
@@ -58,17 +74,41 @@ void setColumnInsert(char **nome) {
     GLOBAL_PARSER.col_count++;
 }
 
-void setValueInsert(char *nome, char type) {
+void  setValueInsert(char *nome, char type) {
     int i;
     GLOBAL_DATA.values  = realloc(GLOBAL_DATA.values, (GLOBAL_PARSER.val_count+1)*sizeof(char *));
     GLOBAL_DATA.type    = realloc(GLOBAL_DATA.type, (GLOBAL_PARSER.val_count+1)*sizeof(char));
 
     // Adiciona o valor no vetor de strings
+    nome -= sizeof(char);
+    if(*nome != '-'){
+		if(*(nome-1) == '-' && *nome == ' ')
+			*nome = '-'; 
+		else
+			nome += sizeof(char);
+	}
+			
     GLOBAL_DATA.values[GLOBAL_PARSER.val_count] = malloc(sizeof(char)*(strlen(nome)+1));
-    if (type == 'I' || type == 'D') {
-        strcpy(GLOBAL_DATA.values[GLOBAL_PARSER.val_count], nome);
-        GLOBAL_DATA.values[GLOBAL_PARSER.val_count][strlen(nome)] = '\0';
-    } else if (type == 'S') {
+			
+    
+			if (type == 'I' || type == 'D') {
+		
+				strcpy(GLOBAL_DATA.values[GLOBAL_PARSER.val_count], nome);
+				GLOBAL_DATA.values[GLOBAL_PARSER.val_count][strlen(nome)] = '\0';
+				
+				nome -= sizeof(char);
+				nome =nome-1;
+				char numeros[] = "!@#$%&*+=~^:/?{]}[";
+				char *pos_atual = strpbrk(nome, numeros);
+				if(pos_atual != NULL){
+					return;
+		 
+				}
+			}
+				
+				
+	
+        if (type == 'S') {
         for (i = 1; i < strlen(nome)-1; i++) {
             GLOBAL_DATA.values[GLOBAL_PARSER.val_count][i-1] = nome[i];
         }
@@ -181,6 +221,25 @@ void clearGlobalStructs() {
     GLOBAL_PARSER.col_count         = 0;
     GLOBAL_PARSER.val_count         = 0;
     GLOBAL_PARSER.step              = 0;
+
+    // Clear select struct
+    for (i = 0; i < GLOBAL_SELECT.nprojection; i++)
+      free(GLOBAL_SELECT.projection[i]);
+
+    free(GLOBAL_SELECT.projection);
+    GLOBAL_SELECT.projection = NULL;
+
+    /* for (i = 0; i < GLOBAL_SELECT.nfilters; i++) */
+    /*   free(GLOBAL_SELECT.filters[i]); */
+
+    /* free(GLOBAL_SELECT.filters); */
+    /* GLOBAL_SELECT.filters = NULL; */
+  
+    /* for (i = 0; i < GLOBAL_SELECT.njoins; i++) */
+    /*   free(GLOBAL_SELECT.join[i]); */
+
+    /* free(GLOBAL_SELECT.join); */
+    /* GLOBAL_SELECT.join = NULL; */
 }
 
 void setMode(char mode) {
@@ -221,8 +280,9 @@ int interface() {
                                 printf("WARNING: Nothing to be inserted. Command ignored.\n");
                             break;
                         case OP_SELECT_ALL:
-	
-                            imprime(&GLOBAL_DATA,GLOBAL_DATA_SELECT,&GLOBAL_PARSER);
+			  // imprime(GLOBAL_DATA.objName);
+			  dump_select();
+			  doSelect(&GLOBAL_SELECT);
                             break;
                         case OP_CREATE_TABLE:
                             createTable(&GLOBAL_DATA);
@@ -248,7 +308,7 @@ int interface() {
                 case OP_DROP_DATABASE:
                 case OP_CREATE_TABLE:
                 case OP_DROP_TABLE:
-                case OP_SELECT_ALL:
+		  // case OP_SELECT_ALL:
                 case OP_INSERT:
                     if (GLOBAL_PARSER.step == 1) {
                         GLOBAL_PARSER.consoleFlag = 0;
@@ -296,68 +356,369 @@ void yyerror(char *s, ...) {
     */
 }
 
+/**
+ * SELECT
+ */
 
+void start_select()
+{
+  GLOBAL_SELECT.nprojection = 0;
+  free(GLOBAL_SELECT.projection);
+  GLOBAL_SELECT.projection = NULL;
 
-void setObjNameSelect(char **name) {
-	if (GLOBAL_PARSER.mode != 0) {
-		GLOBAL_DATA_SELECT.objName = malloc(sizeof(char)*((strlen(*name)+1)));
-		strcpylower(GLOBAL_DATA_SELECT.objName, *name);
-		GLOBAL_DATA_SELECT.objName[strlen(*name)] = '\0';
-		GLOBAL_PARSER.step++;
-	} else {
-		return;
-	}
+  GLOBAL_SELECT.ntables = 0;
+  free(GLOBAL_SELECT.tables);
+  GLOBAL_SELECT.tables = NULL;
+
+  GLOBAL_SELECT.nfilters = 0;
+  free(GLOBAL_SELECT.filters);
+  GLOBAL_SELECT.filters = NULL;
+
+  GLOBAL_SELECT.njoins = 0;
+  free(GLOBAL_SELECT.joins);
+  GLOBAL_SELECT.joins = NULL;
 }
 
-void setColumnProjection(char **name) {
-	GLOBAL_DATA_SELECT.columnName = realloc(GLOBAL_DATA_SELECT.columnName, (GLOBAL_PARSER.col_count+1)*sizeof(char *));
-
-	GLOBAL_DATA_SELECT.columnName[GLOBAL_PARSER.col_count] = malloc(sizeof(char)*(strlen(*name)+1));
-	strcpylower(GLOBAL_DATA_SELECT.columnName[GLOBAL_PARSER.col_count], *name);
-	GLOBAL_DATA_SELECT.columnName[GLOBAL_PARSER.col_count][strlen(*name)] = '\0';
-
-	GLOBAL_PARSER.col_count++;
+int set_select_table(char **table)
+{
+  GLOBAL_SELECT.tables = strdup(*table);
+  
+  GLOBAL_SELECT.tables = malloc(sizeof(char *) * (strlen(*table) + 1));
+  strcpy(GLOBAL_SELECT.tables, *table);
+  GLOBAL_SELECT.tables[strlen(*table)] = '\0';
+  GLOBAL_SELECT.ntables++;
+  
+  return 1;
 }
 
-void setOp(char **name){
-	GLOBAL_DATA_SELECT.op = realloc(GLOBAL_DATA_SELECT.op, (GLOBAL_PARSER.op_test_count+1)*sizeof(char *));
+int add_column_to_projection(char **col_name)
+{
+  int projIndex;
+  char **temp = NULL;
 
-	GLOBAL_DATA_SELECT.op[GLOBAL_PARSER.op_test_count] = malloc(sizeof(char)*(strlen(*name)+1));
-	strcpylower(GLOBAL_DATA_SELECT.op[GLOBAL_PARSER.op_test_count], *name);
-	GLOBAL_DATA_SELECT.op[GLOBAL_PARSER.op_test_count][strlen(*name)] = '\0';
+  projIndex = GLOBAL_SELECT.nprojection++; // Atualizando indice da projecao
+  temp      = realloc(GLOBAL_SELECT.projection, sizeof(char **) * GLOBAL_SELECT.nprojection);
 
-	GLOBAL_PARSER.op_test_count++;
+  // Confere realloc
+  if (temp == NULL) {
+    fprintf(stderr, "Can't realloc column projection!");
+    GLOBAL_PARSER.noerror = 0;
+    
+    return 0;
+  }
+
+  GLOBAL_SELECT.projection = temp; // Sucesso
+  GLOBAL_SELECT.projection[projIndex] = malloc(sizeof(char) * (strlen(*col_name) + 1));
+  
+  // Copia nome da coluna adicionando \0
+  strcpylower(GLOBAL_SELECT.projection[projIndex], *col_name);
+  GLOBAL_SELECT.projection[projIndex][strlen(*col_name)] = '\0';
+
+  return 1;
 }
 
-void setColumnTest(char **name){
+int create_new_filter()
+{
+  free(TEMP_FILTER);
+  TEMP_FILTER = (qr_filter *) malloc(sizeof(qr_filter));
+  
+  TEMP_FILTER->typeLogico   = 'N';
+  TEMP_FILTER->left_table   = NULL;
+  TEMP_FILTER->left	    = NULL;
+  TEMP_FILTER->left_type    = 'N';
+  TEMP_FILTER->typeOp	    = '=';
+  TEMP_FILTER->right_table  = NULL;
+  TEMP_FILTER->right	    = NULL;
+  TEMP_FILTER->right_type   = 'N';
 
-	GLOBAL_DATA_SELECT.nameTeste = realloc(GLOBAL_DATA_SELECT.nameTeste, (GLOBAL_PARSER.col_test_count+1)*sizeof(char *));
-
-	GLOBAL_DATA_SELECT.nameTeste[GLOBAL_PARSER.col_test_count] = malloc(sizeof(char)*(strlen(*name)+1));
-	strcpylower(GLOBAL_DATA_SELECT.nameTeste[GLOBAL_PARSER.col_test_count], *name);
-	GLOBAL_DATA_SELECT.nameTeste[GLOBAL_PARSER.col_test_count][strlen(*name)] = '\0';
-
-	GLOBAL_PARSER.col_test_count++;
+  return 1;
 }
 
-void setValueTest(char **value){
-	GLOBAL_DATA_SELECT.values = realloc(GLOBAL_DATA_SELECT.values, (GLOBAL_PARSER.val_teste_count+1)*sizeof(char *));
+int set_filter_value_pos(int position)
+{
+  if (position == FILTER_POS_LEFT)
+    TEMP_FILTER_POSITION = position;
+  else
+    TEMP_FILTER_POSITION = FILTER_POS_RIGHT;
 
-	GLOBAL_DATA_SELECT.values[GLOBAL_PARSER.val_teste_count] = malloc(sizeof(char)*(strlen(*value)+1));
-	strcpylower(GLOBAL_DATA_SELECT.values[GLOBAL_PARSER.val_teste_count], *value);
-	GLOBAL_DATA_SELECT.values[GLOBAL_PARSER.val_teste_count][strlen(*value)] = '\0';
-
-	GLOBAL_PARSER.val_teste_count++;
+  return 1;
 }
 
-void setAndOR(char **clausule){
-	GLOBAL_DATA_SELECT.andOr = realloc(GLOBAL_DATA_SELECT.andOr, (GLOBAL_PARSER.test_count+1)*sizeof(char *));
+int set_filter_op(char **op)
+{
+  if (strcmp(*op, ">=") == 0)
+    TEMP_FILTER->typeOp = OP_MAIOR_IGUAL_QUE;
+  else if (strcmp(*op, "<=") == 0)
+    TEMP_FILTER->typeOp = OP_MENOR_IGUAL_QUE;
+  else if (strcmp(*op, "<>") == 0)
+    TEMP_FILTER->typeOp = OP_DIFERENTE;
+  else
+    TEMP_FILTER->typeOp = **op;
 
-	GLOBAL_DATA_SELECT.andOr[GLOBAL_PARSER.test_count] = malloc(sizeof(char)*(strlen(*clausule)+1));
-	strcpylower(GLOBAL_DATA_SELECT.andOr[GLOBAL_PARSER.test_count], *clausule);
-	GLOBAL_DATA_SELECT.andOr[GLOBAL_PARSER.test_count][strlen(*clausule)] = '\0';
-
-	GLOBAL_PARSER.test_count++;
-
+  return 1;
 }
 
+int promote_filter_and_substitute(char **table)
+{
+  if (TEMP_FILTER->left != NULL && TEMP_FILTER->left_table == NULL) {
+    TEMP_FILTER->left_table = TEMP_FILTER->left;
+    TEMP_FILTER->left       = strdup(*table);
+  } else {
+    TEMP_FILTER->right_table = TEMP_FILTER->right;
+    TEMP_FILTER->right       = strdup(*table);
+  }
+
+  return 1;
+}
+
+int add_filter_condition(char **name, char type)
+{
+  if (TEMP_FILTER_POSITION == FILTER_POS_LEFT)
+    TEMP_FILTER->left = clean_qmarks(*name);
+  else
+    TEMP_FILTER->right = clean_qmarks(*name);
+
+  switch (type) {
+  case FILTER_VALUE:
+  case FILTER_NUMBER:
+  case FILTER_ALPHANUM:
+    TEMP_FILTER->typeAtt = type;
+    
+    if (TEMP_FILTER_POSITION == FILTER_POS_LEFT)
+      TEMP_FILTER->left_type = FILTER_NOTCOLUMN;
+    else
+      TEMP_FILTER->right_type = FILTER_NOTCOLUMN;
+    break;
+
+  default:
+    if (TEMP_FILTER_POSITION == FILTER_POS_LEFT)
+      TEMP_FILTER->left_type = FILTER_COLUMN;
+    else
+      TEMP_FILTER->right_type = FILTER_COLUMN;
+  }
+  
+  return 1;
+}
+
+int add_filter_to_select()
+{
+  int filterIndex = 0;
+  qr_filter *aux;
+
+  // Sometimes this function will be called without needing,
+  // and is when no temp_filter exists;
+  if (TEMP_FILTER == NULL) return 0;
+  
+  filterIndex = GLOBAL_SELECT.nfilters++;
+  
+  aux = realloc(GLOBAL_SELECT.filters, sizeof(qr_filter) * GLOBAL_SELECT.nfilters);
+
+  if (aux == NULL) {
+    fprintf(stderr, "Cannot realloc filter conditions!\n");
+    GLOBAL_PARSER.noerror = 0;
+    
+    return 0;
+  }
+
+  GLOBAL_SELECT.filters = aux;
+  GLOBAL_SELECT.filters[filterIndex] = *TEMP_FILTER;
+  TEMP_FILTER = NULL;
+  TEMP_FILTER_POSITION = 0;
+
+  return 1;
+}
+
+int set_filter_logic_op(char op)
+{
+  TEMP_FILTER->typeLogico = op;
+  
+  return 1;
+}
+
+char *clean_qmarks(char *name)
+{
+  int i;
+  char *result = (char *) malloc(strlen(name) * sizeof(char));
+
+  if (name[0] == '\'' && name[strlen(name) - 1] == '\'') {
+    for (i = 1; i < strlen(name)-1; i++) {
+      result[i-1] = name[i];
+    }
+    
+    result[strlen(name) - 2] = '\0';
+  } else {
+    free(result);
+    
+    return strdup(name);
+  }
+  
+  return result;
+}
+
+void dump_select()
+{
+  int i;
+  
+  printf("Projeção: ");
+
+  for (i = 0; i < GLOBAL_SELECT.nprojection; i++) {
+    if (i + 1 == GLOBAL_SELECT.nprojection)
+      printf("%s\n", GLOBAL_SELECT.projection[i]);
+    else
+      printf("%s, ", GLOBAL_SELECT.projection[i]);
+  }
+
+  printf("Tabela: %s\n", GLOBAL_SELECT.tables);
+  printf("Quantidade de filtros: %d\n", GLOBAL_SELECT.nfilters);
+
+  for (i = 0; i < GLOBAL_SELECT.nfilters; i++) {
+    printf("Filtro #%02d:\n", i + 1);
+    dump_where(GLOBAL_SELECT.filters[i]);
+  }
+
+  printf("Quantidade de joins: %d\n", GLOBAL_SELECT.njoins);
+  for (i = 0; i < GLOBAL_SELECT.njoins; i++) {
+    printf("Join #%02d:\n", i + 1);
+    dump_join(GLOBAL_SELECT.joins[i]);
+  }
+}
+
+void dump_where(qr_filter filter)
+{
+  printf("Operador Lógico: ");
+  
+  if (filter.typeLogico == 'A')
+    printf("AND\n");
+  else if (filter.typeLogico == 'O')
+    printf("OR\n");
+  else
+    printf("N/A\n");
+
+  if (filter.left_table == NULL)
+    printf("Tabela da coluna do operador da esquerda: [NÃO HÁ]\n");
+  else
+    printf("Tabela da coluna do operador da esquerda: %s\n", filter.left_table);
+  
+  printf("Operador da esquerda: %s ", filter.left);
+
+  switch (filter.left_type) {
+  case FILTER_NOTCOLUMN:
+    printf("(value [%c])\n", filter.left_type);
+    break;
+  case FILTER_COLUMN:
+    printf("(column [%c])\n", filter.left_type);
+    break;
+
+  default: printf("<erro> [%c]\n", filter.left_type);
+  }
+
+  printf("Operador: ");
+
+  switch(filter.typeOp) {
+  case OP_MAIOR_IGUAL_QUE:
+    printf(">=\n");
+    break;
+    
+  case OP_MENOR_IGUAL_QUE:
+    printf("<=\n");
+    break;
+
+  case OP_DIFERENTE:
+    printf("<>\n");
+    break;
+
+  default: printf("%c\n", filter.typeOp);
+  }
+
+  if (filter.right_table == NULL)
+    printf("Tabela da coluna do operador da direita: [NÃO HÁ]\n");
+  else
+    printf("Tabela da coluna do operador da direita: %s\n", filter.right_table);
+
+  printf("Operador da direita: %s ", filter.right);
+
+  switch (filter.right_type) {
+  case FILTER_NOTCOLUMN:
+    printf("(value [%c])\n", filter.right_type);
+    break;
+
+  case FILTER_COLUMN:
+    printf("(column [%c])\n", filter.right_type);
+    break;
+
+  default: printf("<erro> [%c]\n", filter.right_type);
+  }
+  
+  return;
+}
+
+void dump_join(qr_join join)
+{
+  switch (join.type) {
+  case JOIN_TYPE_INNER: printf("JOIN %s ON:\n", join.table); break;
+  case JOIN_TYPE_NATURAL: printf("NATURAL JOIN %s\n", join.table); break;
+  case JOIN_TYPE_LEFT: printf("LEFT JOIN %s ON:\n", join.table); break;
+  case JOIN_TYPE_RIGHT: printf("RIGHT JOIN %s ON:\n", join.table); break;
+  case JOIN_TYPE_FULL: printf("FULL JOIN %s ON:\n", join.table); break;
+  default: printf("WHOOPS! No join type defined\n");
+  }
+
+  if (join.condition != NULL)
+      dump_where(*(join.condition));
+}
+
+void create_new_join()
+{
+  free(TEMP_JOIN);
+  TEMP_JOIN = malloc(sizeof(qr_join));
+  TEMP_JOIN->table      = NULL;
+  TEMP_JOIN->condition  = NULL;
+  TEMP_JOIN->type       = 0;
+}
+
+int set_join_type(int type)
+{
+  TEMP_JOIN->type = type;
+  
+  return 1;
+}
+
+int add_filter_to_join()
+{
+  TEMP_JOIN->condition = TEMP_FILTER;
+  TEMP_FILTER = NULL;
+  
+  return 1;
+}
+
+int add_join_to_select()
+{
+  int join_index;
+  qr_join *aux;
+
+  if (TEMP_JOIN == NULL) return 0;
+
+  join_index = GLOBAL_SELECT.njoins++;
+
+  aux = (qr_join *)realloc(GLOBAL_SELECT.joins, sizeof(qr_join) * GLOBAL_SELECT.njoins);
+
+  if (aux == NULL) {
+    fprintf(stderr, "Cannot realloc JOIN conditions!");
+    GLOBAL_PARSER.noerror = 0;
+
+    return 0;
+  }
+
+  GLOBAL_SELECT.joins = aux;
+  GLOBAL_SELECT.joins[join_index] = *TEMP_JOIN;
+  TEMP_JOIN = NULL;
+  
+  return 1;
+}
+
+int set_join_table(char **table)
+{
+  TEMP_JOIN->table = strdup(*table);
+  
+  return 1;
+}

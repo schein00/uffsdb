@@ -30,7 +30,10 @@ int yywrap() {
         CHAR        PRIMARY     KEY         REFERENCES  DATABASE
         DROP        OBJECT      NUMBER      VALUE       QUIT
         LIST_TABLES LIST_TABLE  ALPHANUM    CONNECT     HELP
-        LIST_DBASES CLEAR	WHERE	AND	OR;
+        LIST_DBASES CLEAR WHERE IN AND OR EXISTS ALL_COLUMNS
+        COMP_OP     NATURAL     LEFT        RIGHT       FULL
+        JOIN	    ON;
+
 
 start: insert | select | create_table | create_database | drop_table | drop_database
      | table_attr | list_tables | connection | exit_program | semicolon {GLOBAL_PARSER.consoleFlag = 1; return 0;}
@@ -106,8 +109,8 @@ table: OBJECT {setObjName(yytext);};
 
 opt_column_list: /*optional*/ | parentesis_open column_list parentesis_close;
 
+// INSERT COLUMNS
 column_list: column | column ',' column_list;
-
 column: OBJECT {setColumnInsert(yytext);};
 
 value_list: value | value ',' value_list;
@@ -149,28 +152,59 @@ create_database: CREATE DATABASE {setMode(OP_CREATE_DATABASE);} OBJECT {setObjNa
 /* DROP DATABASE */
 drop_database: DROP DATABASE {setMode(OP_DROP_DATABASE);} OBJECT {setObjName(yytext);} semicolon {return 0;};
 
-/* SELECT */
-select: SELECT {setMode(OP_SELECT_ALL);} column_list_select FROM table_select clause_where test_list semicolon {return 0;};
 
-table_select: OBJECT {setObjNameSelect(yytext);};
+/*******************************************
+ ** INTERPRETAÇÃO DO SELECT               **
+ *******************************************/
 
-column_list_select: '*' | column_projection | column_projection ',' column_list_select;
+// Sintaxe do SELECT
+select: SELECT {setMode(OP_SELECT_ALL); start_select();} column_list_projection FROM table_select join_cond where_cond semicolon {return 0;};
 
-column_projection: OBJECT {setColumnProjection(yytext);};
+// Definindo Projeções
+column_list_projection: {add_column_to_projection(yytext);} '*' | column_projection | column_projection ',' column_list_projection;
+column_projection: OBJECT {add_column_to_projection(yytext);};
 
-clause_where: /*optional*/| WHERE;
+// Filtros (WHERE's)
+where_cond: /* define que o WHERE é opcional */ | WHERE filter logic_chain;
 
-test_list: /*optional*/ | test | test and_or test_list;
+logic_chain: /* define que uma cadeia de AND ou OR é opcional, mas adiciona o filtro anterior */ {add_filter_to_select();}
+           | logic_op {add_filter_to_select();} filter logic_chain
+	   ;
 
-and_or: OBJECT {setAndOR(yytext);};
+// Definindo aqui a sintaxe VALOR OPERAÇÃO VALOR
+filter: {create_new_filter(); set_filter_value_pos(FILTER_POS_LEFT);} column_value COMP_OP {set_filter_op(yytext); set_filter_value_pos(FILTER_POS_RIGHT);} column_value;
 
-test: column_test operator value_test;
+// Definindo função ao interpretar um AND ou OR
+logic_op: AND {set_filter_logic_op(OP_LOGIC_AND);} | OR {set_filter_logic_op(OP_LOGIC_OR);};
 
-column_test: OBJECT {setColumnTest(yytext);};
+// Identifica uma coluna ou valor especifico
+column_value: column_specification | filter_value;
 
-operator: OBJECT {setOp(yytext);};
+// Determina que uma especificaçao de coluna pode ser COLUNA.CAMPO ou apenas CAMPO
+column_specification: filter_column | table_column;
 
-value_test: OBJECT {setValueTest(yytext);};
+// Veja a definição de promote_filter_and_substitute no 'parser.h' para maiores
+// informações de como estas linhas funcionam
+filter_column: OBJECT {add_filter_condition(yytext, FILTER_COLUMN);};
+table_column: filter_column '.' OBJECT {promote_filter_and_substitute(yytext);};
+
+// Identifica valores (alfanumericos, etc..)
+filter_value: ALPHANUM {add_filter_condition(yytext, FILTER_ALPHANUM);}
+            | NUMBER {add_filter_condition(yytext, FILTER_NUMBER);}
+            | VALUE {add_filter_condition(yytext, FILTER_VALUE);};
+
+join_cond:/* condição JOIN é opcional */ {add_join_to_select();}
+         | LEFT    JOIN OBJECT {create_new_join(); set_join_table(yytext); set_join_type(JOIN_TYPE_LEFT);}  ON filter {add_filter_to_join();} join_cond
+	 | RIGHT   JOIN OBJECT {create_new_join(); set_join_table(yytext); set_join_type(JOIN_TYPE_RIGHT);} ON filter {add_filter_to_join();} join_cond
+	 | FULL    JOIN OBJECT {create_new_join(); set_join_table(yytext); set_join_type(JOIN_TYPE_FULL);}  ON filter {add_filter_to_join();} join_cond
+         | NATURAL JOIN OBJECT {create_new_join(); set_join_table(yytext); set_join_type(JOIN_TYPE_NATURAL);} join_cond
+         |         JOIN OBJECT {create_new_join(); set_join_table(yytext); set_join_type(JOIN_TYPE_INNER);}  ON filter {add_filter_to_join();} join_cond
+	 ;
+
+/* Antigo SELECT */
+/*select: SELECT {setMode(OP_SELECT);} column_list_select FROM table_select semicolon {return 0;};*/
+
+table_select: OBJECT {setObjName(yytext); set_select_table(yytext);};
 
 /* END */
 %%
