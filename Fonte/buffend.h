@@ -1,4 +1,4 @@
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "erros.h"
@@ -51,14 +51,33 @@ typedef struct tp_buffer{ // Estrutura utilizada para armazenar o buffer.
    unsigned int position;   // Próxima posição válida na página.
 }tp_buffer;
 
-typedef struct rc_select{
- char 	*objName; 	//Nome da tabela do select
- char 	**columnName; 	//colunas da tabela para projecao
- char 	**op; 		// operação 
- char 	**nameTeste; 	// colunas para o where
- char 	**values; 		// valor para o where	
- char 	**andOr; 		// se existe and's ou or's, e gravado na ordem para que os testes devem ser feitos;
-  struct column *name;
+typedef struct rc_where {  		//Estrutura auxiliar ao select, usada para salvar cada teste do where
+	int		typeLogic;		//Tipo logico quanto a outras operacoes(AND OR) na primeira operacao sempre consta como where
+	char		*left;			//Coluna ou valor do compo de teste do lado esquedo do teste 
+	int		OP;				//operacao entre os operadores (=,!,<,>) 
+	char		*right;			//Coluna ou valor do compo de teste do lado esquedo do teste
+	
+	//usando lista duplamente encadeada para salvar os where;
+	struct rc_where *pWhere;		//proximo where da lista
+	struct rc_where *aWhere;		//where anterior na lista
+}rc_where;
+
+typedef struct rc_join{		//Estrutura auxiliar par o select fazer join
+	char		*tabel;		//Table que sera feito o join, junto com a tabela definida no select
+	int		type;		//Tipo de join (natural ou usando ON)
+	char		*leftColumn;	//define a coluna do lado esquerdo da operacao
+	int 		OP;			//Operacao que sera feita, teste to entre coluna OP coluna;
+	char		*rightColumn;	//Define coluna do lado direito da operacao 
+}rc_join;
+
+typedef struct rc_select{
+	char 	*objName; 	//Nome da tabela do select
+	char 	**columnName; 	//colunas da tabela para projecao
+	int 		nColumn;		//Numero de colunas para projecao
+	rc_where	*where;		//estrutura que guarda os testes logicos
+	int		nWhere;		//numero de testes logicos presente no select
+	rc_join	*join;		//estrutura que guarda os joins 
+	int		nJoin;		//numero de joins presente no select (sera implementado apenas 1 join, variavel e usada para fazer com n joins)
 }rc_select;
 
 typedef struct rc_insert {
