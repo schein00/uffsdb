@@ -74,7 +74,10 @@ extern int yydebug;
     CLEAR = 284,
     WHERE = 285,
     AND = 286,
-    OR = 287
+    OR = 287,
+    JOIN = 288,
+    NATURAL = 289,
+    ON = 290
   };
 #endif
 /* Tokens.  */
@@ -108,6 +111,9 @@ extern int yydebug;
 #define WHERE 285
 #define AND 286
 #define OR 287
+#define JOIN 288
+#define NATURAL 289
+#define ON 290
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -121,7 +127,7 @@ union YYSTYPE
     int subtok;
     char *strval;
 
-#line 125 "y.tab.h" /* yacc.c:1909  */
+#line 131 "y.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
