@@ -8,46 +8,52 @@
     Retorno:    void.
    ---------------------------------------------------------------------------------------------*/
 
-void imprime(rc_insert *GLOBAL_DATA, rc_select GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
+void imprime(rc_select *GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
   
    
-    int j,erro, x, p, cont=0;
-    struct fs_objects objeto;
+    int j, k,erro, x, p, cont=0;
+    struct fs_objects objeto;// objetoJ;
+//	tp_table *esquemaJ = NULL;
 	
-    if(!verificaNomeTabela(GLOBAL_DATA->objName)){
-        printf("\nERROR: relation \"%s\" was not found.\n\n\n", GLOBAL_DATA->objName);
+    if(!verificaNomeTabela(GLOBAL_DATA_SELECT->objName)){
+        printf("\nERROR: relation \"%s\" was not found.\n\n\n", GLOBAL_DATA_SELECT->objName);
         return;
     }
+    objeto = leObjeto(GLOBAL_DATA_SELECT->objName);
 
-    objeto = leObjeto(GLOBAL_DATA->objName);
 
     tp_table *esquema = leSchema(objeto);
 
-    if(esquema == ERRO_ABRIR_ESQUEMA){
-        printf("ERROR: schema cannot be created.\n");
-        free(esquema);
-        return;
-    }
+    	if(esquema == ERRO_ABRIR_ESQUEMA){
+        	printf("ERROR: schema cannot be created.\n");
+        	free(esquema);
+        	return;
+    	}
 
-    tp_buffer *bufferpoll = initbuffer();
+    tp_buffer *bufferpoll = initbuffer();	
+	
 
-    if(bufferpoll == ERRO_DE_ALOCACAO){
+    if(bufferpoll == ERRO_DE_ALOCACAO ){
         free(bufferpoll);
         free(esquema);
+
         printf("ERROR: no memory available to allocate buffer.\n");
         return;
     }
 
-    erro = SUCCESS;
-    for(x = 0; erro == SUCCESS; x++)
+	erro = SUCCESS;
+	for(x = 0; erro == SUCCESS; x++)
+        	erro = colocaTuplaBuffer(bufferpoll, x, esquema, objeto);
 
-        erro = colocaTuplaBuffer(bufferpoll, x, esquema, objeto);
+	erro = SUCCESS;
+
 
 	if(GLOBAL_PARSER->col_count == 0 && GLOBAL_PARSER->col_test_count == 0){
 
  	int ntuples = --x;
 	p = 0;
 	while(x){
+		
 	    column *pagina = getPage(bufferpoll, esquema, objeto, p);
 	    if(pagina == ERRO_PARAMETRO){
             printf("ERROR: could not open the table.\n");
@@ -74,25 +80,41 @@ void imprime(rc_insert *GLOBAL_DATA, rc_select GLOBAL_DATA_SELECT, rc_parser *GL
 	        printf("\n");
 	    }
 	    cont++;
-		for(j=0; j < objeto.qtdCampos*bufferpoll[p].nrec; j++){
-        	if(pagina[j].tipoCampo == 'S')
-            	printf(" %-20s ", pagina[j].valorCampo);
-        	else if(pagina[j].tipoCampo == 'I'){
-            	int *n = (int *)&pagina[j].valorCampo[0];
-            	printf(" %-10d ", *n);
-        	} else if(pagina[j].tipoCampo == 'C'){
-            	printf(" %-10c ", pagina[j].valorCampo[0]);
-        	} else if(pagina[j].tipoCampo == 'D'){
-            	double *n = (double *)&pagina[j].valorCampo[0];
-    	        printf(" %-10f ", *n);
-        	}
-            if(j>=1 && ((j+1)%objeto.qtdCampos)==0)
-            	printf("\n");
-        	else
-        		printf("|");
-    	}
-    	x-=bufferpoll[p++].nrec;
-    }
+		int podeImprimi = 0, aux = 0;
+
+				
+
+		for(k = 0; k < bufferpoll[p].nrec; k++){
+		if(GLOBAL_DATA_SELECT->where != NULL){
+			for(j=0; j < objeto.qtdCampos && podeImprimi != 1; j++){
+				podeImprimi = verificaWhere(GLOBAL_DATA_SELECT, pagina, j + aux);
+			}
+		}
+	
+		if(podeImprimi == 0){
+			for(j=0; j < objeto.qtdCampos; j++){
+   	     	if(pagina[j + aux].tipoCampo == 'S')
+   		         	printf(" %-20s ", pagina[j + aux].valorCampo);
+   	     	else if(pagina[j + aux].tipoCampo == 'I'){
+   		         	int *n = (int *)&pagina[j + aux].valorCampo[0];
+   		         	printf(" %-10d ", *n);
+   	     	} else if(pagina[j + aux].tipoCampo == 'C'){
+   		         	printf(" %-10c ", pagina[j + aux].valorCampo[0]);
+   	     	} else if(pagina[j + aux].tipoCampo == 'D'){
+            		double *n = (double *)&pagina[j + aux].valorCampo[0];
+    	        		printf(" %-10f ", *n);
+        		}
+            	if(j>= 1 && (( (j)+ 1 )%objeto.qtdCampos)==0)
+            		printf("\n");
+        		else
+        			printf("|");
+		}    	
+	}
+	podeImprimi = 0; 
+	aux += 6;
+   	}
+	x-=bufferpoll[p++].nrec;
+	}
     printf("\n(%d %s)\n\n",ntuples,(1>=ntuples)?"row": "rows");
 
 	}else{
@@ -115,7 +137,7 @@ void imprime(rc_insert *GLOBAL_DATA, rc_select GLOBAL_DATA_SELECT, rc_parser *GL
 	        for(j=0; j < GLOBAL_PARSER->col_count ; j++){
 		  	for(z=0; z < objeto.qtdCampos; z++)  {
 			
-		    if(strcmp(GLOBAL_DATA_SELECT.columnName[j],pagina[z].nomeCampo)==0){ 
+		    if(strcmp(GLOBAL_DATA_SELECT->columnName[j],pagina[z].nomeCampo)==0){ 
 	            	if(pagina[j].tipoCampo == 'S')
 	                printf(" %-20s ", pagina[z].nomeCampo);
 	        	else
@@ -134,33 +156,33 @@ void imprime(rc_insert *GLOBAL_DATA, rc_select GLOBAL_DATA_SELECT, rc_parser *GL
 	    cont++;
 	
 		for(j=0; j < GLOBAL_PARSER->col_count  ; j++){
-		for(z=0; z < objeto.qtdCampos*bufferpoll[p].nrec; z++){
+			for(z=0; z < objeto.qtdCampos*bufferpoll[p].nrec; z++){
 			
-		if(strcmp(GLOBAL_DATA_SELECT.columnName[j],pagina[z].nomeCampo)==0){
+				if(strcmp(GLOBAL_DATA_SELECT->columnName[j],pagina[z].nomeCampo)==0){
 		
-        	if(pagina[z].tipoCampo == 'S')
-            	printf(" %-20s ", pagina[z].valorCampo);
-        	else if(pagina[z].tipoCampo == 'I'){
-            	int *n = (int *)&pagina[z].valorCampo[0];
-            	printf(" %-10d ", *n);
-        	} else if(pagina[z].tipoCampo == 'C'){
-            	printf(" %-10c ", pagina[z].valorCampo[0]);
-        	} else if(pagina[z].tipoCampo == 'D'){
-            	double *n = (double *)&pagina[z].valorCampo[0];
-    	        printf(" %-10f ", *n);
+        				if(pagina[z].tipoCampo == 'S')
+          			  	printf(" %-20s ", pagina[z].valorCampo);
+        				else if(pagina[z].tipoCampo == 'I'){
+          			  	int *n = (int *)&pagina[z].valorCampo[0];
+          			  	printf(" %-10d ", *n);
+        				} else if(pagina[z].tipoCampo == 'C'){
+          			  	printf(" %-10c ", pagina[z].valorCampo[0]);
+        				} else if(pagina[z].tipoCampo == 'D'){
+         				   	double *n = (double *)&pagina[z].valorCampo[0];
+    	    				    printf(" %-10f ", *n);
+					} 
+		
+         				if(GLOBAL_PARSER->col_count>1 && (z%GLOBAL_PARSER->col_count)==0)
+            				printf("|");
+        				else
+        					printf("\n");
+				}
+    			}
 		} 
-		
-            if(GLOBAL_PARSER->col_count>1 && (z%GLOBAL_PARSER->col_count)==0)
-            	printf("|");
-        	else
-        		printf("\n");
-	}
+   	x-=bufferpoll[p++].nrec;
     	}
-} 
-    	x-=bufferpoll[p++].nrec;
+    	printf("\n(%d %s)\n\n",ntuples,(1>=ntuples)?"row": "rows");
     }
-    printf("\n(%d %s)\n\n",ntuples,(1>=ntuples)?"row": "rows");
-}
     free(bufferpoll);
     free(esquema);
 }

@@ -13,6 +13,24 @@
 #define DB_EXISTS 1
 #define DB_NOT_EXISTS 24
 
+#define LEFT 			31
+#define RIGHT 			32
+
+#define NATURAL_JOIN	3
+#define JOIN_ON	 	4
+
+#define AND_LOGIC		5
+#define OR_LOGIC		6
+
+#define OP_IGUAL		11
+#define OP_DIFERENTE	12
+#define OP_MENOR		13
+#define OP_MAIOR		14
+
+#define ALPHANUM_TYPE	15
+#define NUMBER_TYPE		16
+#define INT_TYPE		17
+
 
 struct fs_objects { // Estrutura usada para carregar fs_objects.dat
     char nome[TAMANHO_NOME_TABELA];     //  Nome da tabela.
@@ -53,31 +71,37 @@ typedef struct tp_buffer{ // Estrutura utilizada para armazenar o buffer.
 
 typedef struct rc_where {  		//Estrutura auxiliar ao select, usada para salvar cada teste do where
 	int		typeLogic;		//Tipo logico quanto a outras operacoes(AND OR) na primeira operacao sempre consta como where
+	int 		typeLeft;			//Tipo de dado do atributo da esquerda, se nao for o nome de uma coluna
 	char		*left;			//Coluna ou valor do compo de teste do lado esquedo do teste 
 	int		OP;				//operacao entre os operadores (=,!,<,>) 
 	char		*right;			//Coluna ou valor do compo de teste do lado esquedo do teste
-	
+	int 		typeRight;		//Tipo de dados do atributo da direito, se nao for o nome de uma coluna
 	//usando lista duplamente encadeada para salvar os where;
 	struct rc_where *pWhere;		//proximo where da lista
 	struct rc_where *aWhere;		//where anterior na lista
 }rc_where;
 
 typedef struct rc_join{		//Estrutura auxiliar par o select fazer join
-	char		*tabel;		//Table que sera feito o join, junto com a tabela definida no select
+	char		*table;		//Table que sera feito o join, junto com a tabela definida no select
 	int		type;		//Tipo de join (natural ou usando ON)
 	char		*leftColumn;	//define a coluna do lado esquerdo da operacao
 	int 		OP;			//Operacao que sera feita, teste to entre coluna OP coluna;
 	char		*rightColumn;	//Define coluna do lado direito da operacao 
 }rc_join;
-
-typedef struct rc_select{
-	char 	*objName; 	//Nome da tabela do select
-	char 	**columnName; 	//colunas da tabela para projecao
+
+
+typedef struct rc_select{
+
+	char 	*objName; 	//Nome da tabela do select
+
+	char 	**columnName; 	//colunas da tabela para projecao
+
 	int 		nColumn;		//Numero de colunas para projecao
 	rc_where	*where;		//estrutura que guarda os testes logicos
 	int		nWhere;		//numero de testes logicos presente no select
 	rc_join	*join;		//estrutura que guarda os joins 
-	int		nJoin;		//numero de joins presente no select (sera implementado apenas 1 join, variavel e usada para fazer com n joins)
+	int		nJoin;		//numero de joins presente no select (sera implementado apenas 1 join, variavel e usada para fazer com n joins)
+
 }rc_select;
 
 typedef struct rc_insert {
@@ -186,7 +210,7 @@ int tamTupla(tp_table *esquema, struct fs_objects objeto);
 
 /************************************************************************************************
  ************************************************************************************************/
-int verificaWhere(rc_select *GLOBAL_SELECT, tp_buffer *buffer, int page, int i);
+int verificaWhere(rc_select *GLOBAL_SELECT, column *c, int j);
 /*
    Verifica as condições do where, se acaso estiver correto, retorna 1 
 */
@@ -348,7 +372,10 @@ column * excluirTuplaBuffer(tp_buffer *buffer, tp_table *campos, struct fs_objec
 /************************************************************************************************
 /  Natan J. Mai, Ricardo Zanuzzo e Rogério Torchelsen                                          */
 
-void imprime(rc_insert *GLOBAL_DATA,rc_select GLOBAL_DATA_SELECT,rc_parser *GLOBAL_PARSER );
+/**/
+tp_buffer *join(rc_select *select);
+
+void imprime(rc_select *GLOBAL_DATA_SELECT,rc_parser *GLOBAL_PARSER );
 /* ----------------------------------------------------------------------------------------------
     Objetivo:   Utilizada para impressão de tabelas.
     Parametros: Nome da tabela (char).

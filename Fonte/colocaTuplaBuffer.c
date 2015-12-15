@@ -1,4 +1,4 @@
-//BufferPool
+		//BufferPool
 #include "buffend.h"
 
 int colocaTuplaBuffer(tp_buffer *buffer, int from, tp_table *campos, struct fs_objects objeto){//Define a página que será incluida uma nova tupla

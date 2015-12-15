@@ -230,7 +230,7 @@ int interface() {
                             break;
                         case OP_SELECT_ALL:
 			    
-                            imprime(&GLOBAL_SELECT,&GLOBAL_PARSER);
+                            imprime(&GLOBAL_SELECT, &GLOBAL_PARSER);
                             break;
                         case OP_CREATE_TABLE:
                             createTable(&GLOBAL_DATA);
@@ -317,6 +317,7 @@ void resetSelect(){
 	free(GLOBAL_SELECT.join);
 	GLOBAL_SELECT.join = NULL;
 	GLOBAL_SELECT.nJoin = 0;
+	
 }
 
 void setObjNameSelect(char **name) {
@@ -328,6 +329,7 @@ void setObjNameSelect(char **name) {
 	} else {
 		return;
 	}
+	
 }
 
 void setColumnProjection(char **name) {
@@ -338,6 +340,7 @@ void setColumnProjection(char **name) {
 	GLOBAL_SELECT.columnName[GLOBAL_SELECT.nColumn][strlen(*name)] = '\0';
 
 	GLOBAL_SELECT.nColumn++;
+
 }
 
 
@@ -346,6 +349,7 @@ void setPosition(int p){
 		position = p;
 	else 
 		position = RIGHT;
+	
 }
 
 void addWhereCondition(){
@@ -354,6 +358,8 @@ void addWhereCondition(){
 	w->pWhere = NULL;
 	w->aWhere = NULL;
 	w->typeLogic = 0;
+	w->typeLeft = 0;
+	w->typeRight = 0;
 
 	if(GLOBAL_SELECT.where == NULL)
 		GLOBAL_SELECT.where = w;
@@ -367,6 +373,7 @@ void addWhereCondition(){
 	}
 
 	GLOBAL_SELECT.nWhere++;
+	
 }
 
 void setCondition(int OP){
@@ -376,6 +383,7 @@ void setCondition(int OP){
 		if(aux->pWhere == NULL)
 			aux->OP = OP;
 	}
+	
 }
 
 void setOpLogic(int logic){
@@ -389,27 +397,58 @@ void setOpLogic(int logic){
 
 
 void setColumnTest(char **name){
-	if(position == LEFT){
-		GLOBAL_SELECT.where->left = malloc(sizeof(char)*(strlen(*name) + 1));
-		strcpylower(GLOBAL_SELECT.where->left, *name);
-		GLOBAL_SELECT.where->left += '\0';
-	}else{
-		GLOBAL_SELECT.where->right = malloc(sizeof(char)*(strlen(*name) + 1));
-		strcpylower(GLOBAL_SELECT.where->right, *name);
-		GLOBAL_SELECT.where->right += '\0';
+	printf("add coluna: %s\n", *name);
+	int i;
+	rc_where *aux = GLOBAL_SELECT.where;
+	for(i = 0 ; i < GLOBAL_SELECT.nWhere; i++){
+		if(aux->pWhere == NULL){
+	
+			if(position == LEFT){
+				GLOBAL_SELECT.where->left = malloc(sizeof(char)*(strlen(*name) + 1));
+				strcpylower(GLOBAL_SELECT.where->left, *name);
+					GLOBAL_SELECT.where->left += '\0';
+			}else{
+				GLOBAL_SELECT.where->right = malloc(sizeof(char)*(strlen(*name) + 1));
+				strcpylower(GLOBAL_SELECT.where->right, *name);
+				GLOBAL_SELECT.where->right += '\0';
+			}
+		}
 	}
 }
 
-void addValueTest(char **value){
+void addValueTest(char *value){
 
-	if(position == LEFT){
-		GLOBAL_SELECT.where->left = malloc(sizeof(char)*(strlen(*value) + 1));
-		strcpylower(GLOBAL_SELECT.where->left, *value);
-		GLOBAL_SELECT.where->left += '\0';
-	}else{
-		GLOBAL_SELECT.where->right = malloc(sizeof(char)*(strlen(*value) + 1));
-		strcpylower(GLOBAL_SELECT.where->right, *value);
-		GLOBAL_SELECT.where->right += '\0';
+	int i, j;
+	rc_where *aux = GLOBAL_SELECT.where;
+	for(i = 0 ; i < GLOBAL_SELECT.nWhere; i++){
+		if(aux->pWhere == NULL){	
+			if(position == LEFT){
+				GLOBAL_SELECT.where->left = malloc(sizeof(char)*(strlen(value) + 1));				
+				if(aux->typeLeft == INT_TYPE || aux->typeLeft ==  NUMBER_TYPE){					
+					strcpylower(GLOBAL_SELECT.where->left, value);
+					GLOBAL_SELECT.where->left += '\0';
+
+					
+				}else{
+					for (j = 1; j < strlen(value)-1; j++) {
+           				GLOBAL_SELECT.where->left[j-1] = value[j];
+        				}
+        					GLOBAL_SELECT.where->left[strlen(value)-2] = '\0';
+				}
+			}else{
+				GLOBAL_SELECT.where->right = malloc(sizeof(char)*(strlen(value) + 1));
+				if(aux->typeRight == INT_TYPE || aux->typeRight ==  NUMBER_TYPE){					
+					strcpylower(GLOBAL_SELECT.where->right, value);
+					GLOBAL_SELECT.where->right += '\0';
+					
+				}else{
+					for (j = 1; j < strlen(value)-1; j++) {
+           				GLOBAL_SELECT.where->right[j-1] = value[j];
+        				}
+        					GLOBAL_SELECT.where->right[strlen(value)-2] = '\0';
+				}	
+			}
+		}
 	}
 }
 
@@ -433,11 +472,39 @@ void setColumnJoin(char **name){
 }
 
 void setTableJoin(char **name){
-		GLOBAL_SELECT.join->tabel = malloc(sizeof(char)*(strlen(*name) + 1));
-		strcpylower(GLOBAL_SELECT.join->tabel, *name);
-		GLOBAL_SELECT.join->tabel += '\0';
+		GLOBAL_SELECT.join->table = malloc(sizeof(char)*(strlen(*name) + 1));
+		strcpylower(GLOBAL_SELECT.join->table, *name);
+		GLOBAL_SELECT.join->table += '\0';
 }
 
 void setConditionJoin(int OP){
 	GLOBAL_SELECT.join->OP = OP;
 }
+void addTypeValue(int type){
+	
+	int i;
+	rc_where *aux = GLOBAL_SELECT.where;
+	
+	if(GLOBAL_SELECT.where == NULL){
+		return;
+	}
+
+	if(GLOBAL_SELECT.where->pWhere == NULL){
+			if(position == LEFT)
+				GLOBAL_SELECT.where->typeLeft = type;
+				
+			else
+				GLOBAL_SELECT.where->typeRight = type;
+	}
+
+	for(i = 0 ; i <= GLOBAL_SELECT.nWhere; i++){
+		if(aux->pWhere == NULL){
+			if(position == LEFT)
+				aux->typeLeft = type;
+				
+			else
+				aux->typeRight = type;
+		}
+	}	
+
+}			

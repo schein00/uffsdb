@@ -113,8 +113,8 @@ column: OBJECT {setColumnInsert(yytext);};
 
 value_list: value | value ',' value_list;
 
-value: VALUE {setValueInsert(yylval.strval, 'D');}
-     | NUMBER {setValueInsert(yylval.strval, 'I');}
+value: NUMBER {setValueInsert(yylval.strval, 'D');}
+     | VALUE {setValueInsert(yylval.strval, 'I');}
      | ALPHANUM {setValueInsert(yylval.strval, 'S');};
 
 /* CREATE TABLE */
@@ -151,61 +151,61 @@ create_database: CREATE DATABASE {setMode(OP_CREATE_DATABASE);} OBJECT {setObjNa
 drop_database: DROP DATABASE {setMode(OP_DROP_DATABASE);} OBJECT {setObjName(yytext);} semicolon {return 0;};
 
 /*-------------- SELECT ------------------ */
-select: SELECT {setMode(OP_SELECT_ALL); resetSelect(); printf("Reseta select\n");} column_list_select FROM table_select clause_join clause_where semicolon {return 0;};
+select: SELECT {setMode(OP_SELECT_ALL); resetSelect();} column_list_select FROM table_select clause_join clause_where semicolon {return 0;};
 
 //tabela onde sera 'executado' o select
-table_select: OBJECT {setObjNameSelect(yytext); printf("add tabela: %s\n", *yytext);};
+table_select: OBJECT {setObjNameSelect(yytext);};
 
 //define lista de colunas que serao projatadas
 column_list_select: '*' | column_projection | column_projection ',' column_list_select;
 
 //coluna que sera projetada e adiciona na estrutura usada pelo select
-column_projection: OBJECT {setColumnProjection(yytext); printf("add coluna: %s\n", *yytext);};
+column_projection: OBJECT {setColumnProjection(yytext);};
 
 //definicao da sintaxe do where
-clause_where: /*optional*/ | WHERE test test_list;
+clause_where: /*optional*/ | WHERE {addWhereCondition(); } test test_list;
 
 //definicao da sintaxe dos AND e OR
-test_list: /*optional*/ {addWhereCondition(); printf("where s\n");} | {addWhereCondition(); printf("where \n");} op_logic  test test_list;
+test_list: /*optional*/ | {addWhereCondition();} op_logic  test test_list;
 
 //operador logico
-op_logic: AND {setOpLogic(AND_LOGIC); printf("add AND\n");} | OR {setOpLogic(OR_LOGIC); printf("OR\n");};
+op_logic: AND {setOpLogic(AND_LOGIC);} | OR {setOpLogic(OR_LOGIC);};
 
 
 //definicao da sintaxe de uma operacao (valor operador valor)
-test: {setPosition(LEFT); printf("add camp left\n");} camp_test  condition {setPosition(LEFT);printf("add camp right\n");} camp_test;
+test: {setPosition(LEFT);} camp_test  condition {setPosition(RIGHT);} camp_test;
 
 //condicao que serao feitas entre os valores e adicao a estrutura usada pelo select
-condition: '=' {setCondition(OP_IGUAL); printf("add op =\n");} 
-         | '>' {setCondition(OP_MAIOR); printf("add op >\n");}
-         | '<' {setCondition(OP_MENOR); printf("add op <\n");} 
-	    | '!' {setCondition(OP_DIFERENTE); printf("add op !\n");};
+condition: '=' {setCondition(OP_IGUAL);} 
+         | '>' {setCondition(OP_MAIOR);}
+         | '<' {setCondition(OP_MENOR);} 
+	    | '!' {setCondition(OP_DIFERENTE);};
 
 //definicao da sintaxe de um valor, podendo ser uma coluna ou um valor incerido
 camp_test: column_test | value_test;
 
 //definicao da coluna do teste e 
-column_test: OBJECT {setColumnTest(yytext); printf("add coluna teste %s\n", *yytext);};
+column_test: OBJECT {setColumnTest(yytext);};
 
 //Definicao de um valor pededno ser float, int e caracteres
-value_test: ALPHANUM {addValueTest(yytext); printf("add valor teste: %s\n", *yytext);}
-            | NUMBER {addValueTest(yytext); printf("add valor teste: %s\n", *yytext);}
-            | VALUE {addValueTest(yytext); printf("add valor teste: %s\n", *yytext);};
+value_test: ALPHANUM {addTypeValue(ALPHANUM_TYPE); addValueTest(*yytext); }
+            | VALUE {addTypeValue(NUMBER_TYPE); addValueTest(*yytext); }
+            | NUMBER { addTypeValue(INT_TYPE); addValueTest(*yytext);};
 
 
 //definicao da sintaxe do joins
-clause_join: /*optional*/ | NATURAL JOIN {addNewJoin(NATURAL_JOIN); setTableJoin(yytext);printf("add natural join\n");} table_join  | JOIN {addNewJoin(JOIN_ON);printf("add join \n");} table_join ON join_test;
+clause_join: /*optional*/ | NATURAL JOIN {addNewJoin(NATURAL_JOIN); setTableJoin(yytext);} table_join  | JOIN {addNewJoin(JOIN_ON);} table_join ON join_test;
 
 join_test: {setPosition(LEFT);} column_join condition_join {setPosition(RIGHT);} column_join;
 
-table_join: OBJECT {setTableJoin(yytext); printf("add tabela join:  %s\n", *yytext);};;
+table_join: OBJECT {setTableJoin(yytext);};
 
-column_join: OBJECT {setColumnJoin(yytext); printf("add coluna join:  %s\n", *yytext);};
+column_join: OBJECT {setColumnJoin(yytext);};
 
-condition_join: '=' {setConditionJoin(OP_IGUAL); printf("add op =\n");} 
-         	    | '>' {setConditionJoin(OP_MAIOR); printf("add op >\n");}
-              | '<' {setConditionJoin(OP_MENOR); printf("add op <\n");} 
-      	    | '!' {setConditionJoin(OP_DIFERENTE); printf("add op !\n");};
+condition_join: '=' {setConditionJoin(OP_IGUAL);} 
+         	    | '>' {setConditionJoin(OP_MAIOR);}
+              | '<' {setConditionJoin(OP_MENOR);} 
+      	    | '!' {setConditionJoin(OP_DIFERENTE);};
 
 
 /*-------------- SELECT ------------------ */

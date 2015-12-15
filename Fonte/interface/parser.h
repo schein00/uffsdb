@@ -10,21 +10,6 @@
 #define OP_DROP_DATABASE 	5
 #define OP_SELECT_ALL 		6
 
-
-#define LEFT 			1
-#define RIGHT 			2
-
-#define NATURAL_JOIN	3
-#define JOIN_ON	 	4
-
-#define AND_LOGIC		5
-#define OR_LOGIC		6
-
-#define OP_IGUAL		11
-#define OP_DIFERENTE	12
-#define OP_MENOR		13
-#define OP_MAIOR		14
-
 // flag usada para saber de que lado ser inserido o valor do teste
 int position;
 
@@ -153,7 +138,7 @@ void setPosition(int p);
 void setColumnTest(char **name);
 
 // Seta o valor do teste
-void addValueTest(char **value);
+void addValueTest(char *value);
 
 // Adiciona um novo join
 // podendo ser um NATURAL JOIN ou um JOIN ... ON ...
@@ -168,3 +153,6 @@ void setTableJoin(char **name);
 
 //Adiciona o operador da condicao do join
 void setConditionJoin(int OP);
+
+//Adiciona um tipo para o valor que sera usado nos testes do where
+void addTypeValue(int type);
