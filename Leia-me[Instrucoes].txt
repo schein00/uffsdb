@@ -1,4 +1,4 @@
-########## LEIA-ME PARTE 1 ##############################################################################################################
+﻿########## LEIA-ME PARTE 1 ##############################################################################################################
 
 => 15 Julho 2014 <=
 
@@ -349,3 +349,31 @@ Os comandos SQL e os objetos das relações (i.e. <NomeTabelas>, <NomeCampos> ..
 	ex: 
 		<TABELA> e <tabela> se referem a mesma relação.
 		<INSERT> e <insert> se referem ao mesmo comando SQL.
+
+
+##############LEIA-ME PARTE 4 #############################################################################################################
+
+=> 14 de dezembro de 2015 <=
+
+Universidade Federal da Fronteira Sul – UFFS
+Curso: Ciência da Computação
+Componente Curricular: Banco de Dados II
+Professor: Dr. Denio Duarte
+Alunos: Jeferson A. Schein, Ivair Puerari.
+=============================================================================================================================================
+
+O reconhecedor do comando Select, aceita '*' para fazer a projecao de todas as colunas envolvidas no select,
+aceita o comando where com as operacoes:
+	=  // Igual
+	! // Diferente
+	< // Menor
+	> //Maior
+
+o interpretador também le AND e OR e cria uma lista duplamente encadeada de wheres, mas nao foi implementado condicao com AND e OR.
+O interpretador aceita a criacao de NATURAL JOIN e JOIN tabela ON id = id; porem joins nao foram implementados como saida.
+
+sintaxe da consulta que foram implementadas:
+	select * from medico;
+	select crm, nome from medico;
+	select * from paciente where idade = 18;
+	select nome from paciente where cpf = 13947265;
