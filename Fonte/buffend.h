@@ -33,10 +33,10 @@
 
 
 struct fs_objects { // Estrutura usada para carregar fs_objects.dat
-    char nome[TAMANHO_NOME_TABELA];     //  Nome da tabela.
-    int cod;                            // Código da tabela.
-    char nArquivo[TAMANHO_NOME_ARQUIVO];// Nome do arquivo onde estão armazenados os dados da tabela.
-    int qtdCampos;                      // Quantidade de campos da tabela.
+    char nome[TAMANHO_NOME_TABELA];      //  Nome da tabela.
+    int cod;                             // Código da tabela.
+    char nArquivo[TAMANHO_NOME_ARQUIVO]; // Nome do arquivo onde estão armazenados os dados da tabela.
+    int qtdCampos;                       // Quantidade de campos da tabela.
 };
 
 typedef struct tp_table{ // Estrutura usada para carregar fs_schema.dat
@@ -90,6 +90,7 @@ typedef struct rc_join{		//Estrutura auxiliar par o select fazer join
 }rc_join;
 
 
+
 typedef struct rc_select{
 
 	char 	*objName; 	//Nome da tabela do select
@@ -101,8 +102,13 @@ typedef struct rc_select{
 	int		nWhere;		//numero de testes logicos presente no select
 	rc_join	*join;		//estrutura que guarda os joins 
 	int		nJoin;		//numero de joins presente no select (sera implementado apenas 1 join, variavel e usada para fazer com n joins)
-
 }rc_select;
+
+typedef struct s_join{
+	struct tp_table schema;
+	
+}s_join;
+
 
 typedef struct rc_insert {
     char    *objName;           // Nome do objeto (tabela, banco de dados, etc...)

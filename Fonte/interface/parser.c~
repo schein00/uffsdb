@@ -397,7 +397,6 @@ void setOpLogic(int logic){
 
 
 void setColumnTest(char **name){
-	printf("add coluna: %s\n", *name);
 	int i;
 	rc_where *aux = GLOBAL_SELECT.where;
 	for(i = 0 ; i < GLOBAL_SELECT.nWhere; i++){
@@ -417,7 +416,7 @@ void setColumnTest(char **name){
 }
 
 void addValueTest(char *value){
-	printf("value inser: %s\n", value);
+
 	int i, j;
 	rc_where *aux = GLOBAL_SELECT.where;
 	for(i = 0 ; i < GLOBAL_SELECT.nWhere; i++){
@@ -427,7 +426,7 @@ void addValueTest(char *value){
 				if(aux->typeLeft == INT_TYPE || aux->typeLeft ==  NUMBER_TYPE){					
 					strcpylower(GLOBAL_SELECT.where->left, value);
 					GLOBAL_SELECT.where->left += '\0';
-						printf("value inser: %s\n",GLOBAL_SELECT.where->left );
+
 					
 				}else{
 					for (j = 1; j < strlen(value)-1; j++) {
@@ -440,7 +439,7 @@ void addValueTest(char *value){
 				if(aux->typeRight == INT_TYPE || aux->typeRight ==  NUMBER_TYPE){					
 					strcpylower(GLOBAL_SELECT.where->right, value);
 					GLOBAL_SELECT.where->right += '\0';
-					printf("value inser: %s\n",GLOBAL_SELECT.where->right );
+					
 				}else{
 					for (j = 1; j < strlen(value)-1; j++) {
            				GLOBAL_SELECT.where->right[j-1] = value[j];
@@ -481,17 +480,15 @@ void setConditionJoin(int OP){
 	GLOBAL_SELECT.join->OP = OP;
 }
 void addTypeValue(int type){
-	printf("tipo value: %d\n", type);
+	
 	int i;
 	rc_where *aux = GLOBAL_SELECT.where;
 	
 	if(GLOBAL_SELECT.where == NULL){
-		printf("erro where null\n");
 		return;
 	}
 
 	if(GLOBAL_SELECT.where->pWhere == NULL){
-			printf("prox where NULL\n");
 			if(position == LEFT)
 				GLOBAL_SELECT.where->typeLeft = type;
 				

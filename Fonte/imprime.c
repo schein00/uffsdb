@@ -9,13 +9,10 @@
    ---------------------------------------------------------------------------------------------*/
 
 void imprime(rc_select *GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
-  
    
-    	int j, k,erro, x, y, yy, p, cont=0;
+    	int j, f, k, l,erro, x, y, yy, p, q, cont=0, aux, podeImprimi;
     	struct fs_objects objeto, objetoJ;
-	tp_table *esquemaJ = NULL;
-	tp_buffer *bufferpollJ = NULL;
-	
+
 
     	if(!verificaNomeTabela(GLOBAL_DATA_SELECT->objName)){
     	    printf("\nERROR: relation \"%s\" was not found.\n\n\n", GLOBAL_DATA_SELECT->objName);
@@ -87,7 +84,8 @@ void imprime(rc_select *GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
 	        			printf("\n");
 	    			}
 	    			cont++;
-				int podeImprimi = 0,aux =0;
+				podeImprimi = 0;
+				aux =0;
 
 				
 		
@@ -171,7 +169,7 @@ void imprime(rc_select *GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
 	    			}
 	    			cont++;
 		
-				int podeImprimi = 0, aux = 0;
+				podeImprimi = 0, aux = 0;
 	
 				for(k = 0; k < bufferpoll[p].nrec; k++){
 					if(GLOBAL_DATA_SELECT->where != NULL){
@@ -222,7 +220,7 @@ void imprime(rc_select *GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
     		}
 	
 		objetoJ = leObjeto(GLOBAL_DATA_SELECT->join->table);
-		esquemaJ = leSchema(objetoJ);
+		tp_table *esquemaJ = leSchema(objetoJ);
 
 		if(esquemaJ == ERRO_ABRIR_ESQUEMA){
 	    	    	printf("ERROR: schema cannot be created.\n");
@@ -230,11 +228,11 @@ void imprime(rc_select *GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
     	    		return;
     		}
 
-		bufferpollJ = initbuffer();	
+		tp_buffer *bufferpollJ = initbuffer();	
 	
     		if(bufferpollJ == ERRO_DE_ALOCACAO ){
-     		free(bufferpoll);
-     	   	free(esquema);
+     		free(bufferpollJ);
+     	   	free(esquemaJ);
 	        	printf("ERROR: no memory available to allocate buffer.\n");
      	   	return;
     		}
@@ -243,7 +241,12 @@ void imprime(rc_select *GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
 		for(y = 0; erro == SUCCESS; y++)
         		erro = colocaTuplaBuffer(bufferpollJ, y, esquemaJ, objetoJ);
 		
+
+		int ntuples = --x;		
+		y--;
+		p = 0;
 		while(x){
+			printf("while join x\n");
 			column *pagina = getPage(bufferpoll, esquema, objeto, p);
    			if(pagina == ERRO_PARAMETRO){
          			printf("ERROR: could not open the table.\n");
@@ -251,70 +254,146 @@ void imprime(rc_select *GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
          			free(esquema);
          			return;
     			}
+			column *paginaJ = getPage(bufferpollJ, esquemaJ, objetoJ, p);
+			if(paginaJ == ERRO_PARAMETRO){
+         			printf("ERROR: could not open the table.\n");
+         			free(bufferpollJ);
+         			free(esquemaJ);
+         			return;
+    			}
+
+
+			int podeImprimi = 0;
+		
+			if(!cont) {
+				for(j=0; j < objeto.qtdCampos; j++){									
+					if(pagina[j].tipoCampo == 'S')
+						printf(" %-20s ", pagina[j].nomeCampo);
+					else
+						printf(" %-10s ", pagina[j].nomeCampo);
+	
+					if(j < (objeto.qtdCampos + objetoJ.qtdCampos)-1)
+						printf("|");
+				}
+				for(l = 0; l < objetoJ.qtdCampos ; l++){
+					
+					if(pagina[ l + j].tipoCampo == 'S')
+						printf(" %-20s ", paginaJ[ l+ j].nomeCampo);
+					else
+						printf(" %-10s ", paginaJ[l + j].nomeCampo);
+	
+					if(j < (objeto.qtdCampos + objetoJ.qtdCampos) - 1)
+						printf("|");
+				}
+				
+				printf("\n");
+				for(j=0; j < objeto.qtdCampos + objetoJ.qtdCampos; j++){
+					printf("%s",(pagina[j].tipoCampo == 'S')? "----------------------": "------------");
+				}
+				printf("\n");
+			}
+			cont++;
+		
+
+			for(k = 0; k < bufferpoll[p].nrec; k++){
+				yy = y;
+				q = 0;
+				aux = 0;
+				podeImprimi = 0;
+				while(yy){
+					printf("while join y%d\n", yy);
+	
+					column *paginaJ = getPage(bufferpollJ, esquemaJ, objetoJ, q);
+		   			if(paginaJ == ERRO_PARAMETRO){
+		         			printf("ERROR: could not open the table.\n");
+		         			free(bufferpollJ);
+		         			free(esquemaJ);
+		         			return;
+					}
+					for(l = 0; l < bufferpollJ[q].nrec; l++){
+						for(j = 0; j < objeto.qtdCampos && podeImprimi != 1; j++){						
+							for(f = 0; f < objetoJ.qtdCampos  && podeImprimi != 1; f++){
+							printf("P %s = %s\n",pagina[j].valorCampo , paginaJ[f].valorCampo);
+								if(strcmp( pagina[j].nomeCampo, paginaJ[f].nomeCampo) == 0){
+									printf("nome campo igual\n");
+									if((pagina[j].tipoCampo == 'S' || pagina[j].tipoCampo == 'C' ) && 
+										(paginaJ[f].tipoCampo == 'S' || paginaJ[f].tipoCampo == 'C' )){
+										printf(" campo char\n");
+										if(strcmp(pagina[j].valorCampo, paginaJ[f].valorCampo) != 0){
+											podeImprimi = 1; printf("nome igual\n");}
+									}else if(pagina[j].tipoCampo == 'I' && paginaJ[f].tipoCampo == 'I' ){
+										int c = (int)pagina[j].valorCampo[0]; 
+										int s = (int)paginaJ[f].valorCampo[0]; printf("P3 %d = %d\n", c, s);  printf("P %d = %d\n", j, f); 
+										if(c != s){
+											podeImprimi = 1; /*printf("P %d = %d\n", *c, *s);*/ }								
+									}else if(pagina[j].tipoCampo == 'D' && paginaJ[f].tipoCampo == 'D' ){
+										double c = atof(pagina[j].valorCampo);
+										double s = atof(paginaJ[f].valorCampo);
+										if(c != s)
+											podeImprimi = 1;
+									}
+								}
+							}
+							
+							if(podeImprimi == 0){
+								for(j=0; j < objeto.qtdCampos ; j++){
+   	     							if(pagina[j + aux].tipoCampo == 'S')										
+				   		     		    	printf(" %-20s ", pagina[j + aux].valorCampo);
+				   	     			else if(pagina[j + aux].tipoCampo == 'I'){
+   		         							int *n = (int *)&pagina[j + aux].valorCampo[0];
+   		         							printf(" %-10d ", *n);
+   	     							} else if(pagina[j + aux].tipoCampo == 'C'){
+   		         							printf(" %-10c ", pagina[j + aux].valorCampo[0]);
+   	     							} else if(pagina[j + aux].tipoCampo == 'D'){
+            								double *n = (double *)&pagina[j + aux].valorCampo[0];
+    	        								printf(" %-10f ", *n);
+        								}
+									if((objeto.qtdCampos+objetoJ.qtdCampos) != j + 1)            				
+        									printf("|");
+								}
+								aux += objeto.qtdCampos;
+								 for(j = 0; j  < objeto.qtdCampos ; j++){
+   	     							if(paginaJ[j + aux].tipoCampo == 'S')
+				   		     		    	printf(" %-20s ", paginaJ[j + aux].valorCampo);
+				   	     			else if(paginaJ[j + aux].tipoCampo == 'I'){
+   		         							int *n = (int *)&paginaJ[j + aux].valorCampo[0];
+   		         							printf(" %-10d ", *n);
+   	     							} else if(paginaJ[j + aux].tipoCampo == 'C'){
+   		         							printf(" %-10c ", paginaJ[j + aux].valorCampo[0]);
+   	     							} else if(paginaJ[j + aux].tipoCampo == 'D'){
+            								double *n = (double *)&paginaJ[j + aux].valorCampo[0];
+    	        								printf(" %-10f ", *n);
+        								}
+				
+     			       				if((objeto.qtdCampos+objetoJ.qtdCampos)==j+1)
+            								printf("\n");
+        								else
+        									printf("|");
+								}
+								aux += objetoJ.qtdCampos;								
+							}else {
+								ntuples--;
+							}
+							podeImprimi = 0; 
+							aux += objeto.qtdCampos;			
+
+							
+						}
+							
+					}
+					yy-=bufferpollJ[q++].nrec ;
+				}
+				
+				yy = y;
+			}
 			
+			x-=bufferpoll[p++].nrec ;			
+		}	
+		printf("\n(%d %s)\n\n",ntuples,(1>=ntuples)?"row": "rows");
+
 	}
 	
     	free(bufferpoll);
     	free(esquema);
-	free(bufferpollJ);
-    	free(esquemaJ);
 }
 
-void printJoin(tp_buffer *bufferpoll, tp_table *s)
-{
-	column *pagina;
-	int column_count = schema_column_count(s), p = 0, j, cont = 0, ntuples = 0;
-  
-	do {
-		pagina = getBufferPage(bufferpoll, s, p);
-
-		if (pagina == NULL) 
-			return;
-   
-		if(pagina == ERRO_PARAMETRO){
-			printf("ERROR: could not open the table.\n");
-			return;
-		}
-
-		if(!cont) {
-			for(j=0; j < column_count; j++){
-				if(pagina[j].tipoCampo == 'S')
-					printf(" %-20s ", pagina[j].nomeCampo);
-				else
-					printf(" %-10s ", pagina[j].nomeCampo);
-
-				if(j<column_count-1)
-					printf("|");
-			}
-			printf("\n");
-			for(j=0; j < column_count; j++){
-				printf("%s",(pagina[j].tipoCampo == 'S')? "----------------------": "------------");
-				if(j<column_count-1)
-					printf("+");
-			}
-			printf("\n");
-		}
-		cont++;
-		for(j=0; j < column_count*bufferpoll[p].nrec; j++){
-			if(pagina[j].tipoCampo == 'S')
-				printf(" %-20s ", pagina[j].valorCampo);
-			else if(pagina[j].tipoCampo == 'I'){
-				int *n = (int *)&pagina[j].valorCampo[0];
-				printf(" %-10d ", *n);
-			} else if(pagina[j].tipoCampo == 'C'){
-				printf(" %-10c ", pagina[j].valorCampo[0]);
-			} else if(pagina[j].tipoCampo == 'D'){
-				double *n = (double *)&pagina[j].valorCampo[0];
-				printf(" %-10f ", *n);
-			}
-			if(j>=1 && ((j+1)%column_count)==0)
-				printf("\n");
-			else
-				printf("|");
-		}
-
-		p++;
-	} while(pagina != NULL);
-  
-	printf("\n(%d %s)\n\n",ntuples,(1>=ntuples)?"row": "rows");
-}

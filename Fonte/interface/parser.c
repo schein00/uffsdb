@@ -397,7 +397,6 @@ void setOpLogic(int logic){
 
 
 void setColumnTest(char **name){
-	printf("add coluna: %s\n", *name);
 	int i;
 	rc_where *aux = GLOBAL_SELECT.where;
 	for(i = 0 ; i < GLOBAL_SELECT.nWhere; i++){

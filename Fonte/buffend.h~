@@ -33,10 +33,10 @@
 
 
 struct fs_objects { // Estrutura usada para carregar fs_objects.dat
-    char nome[TAMANHO_NOME_TABELA];     //  Nome da tabela.
-    int cod;                            // Código da tabela.
-    char nArquivo[TAMANHO_NOME_ARQUIVO];// Nome do arquivo onde estão armazenados os dados da tabela.
-    int qtdCampos;                      // Quantidade de campos da tabela.
+    char nome[TAMANHO_NOME_TABELA];      //  Nome da tabela.
+    int cod;                             // Código da tabela.
+    char nArquivo[TAMANHO_NOME_ARQUIVO]; // Nome do arquivo onde estão armazenados os dados da tabela.
+    int qtdCampos;                       // Quantidade de campos da tabela.
 };
 
 typedef struct tp_table{ // Estrutura usada para carregar fs_schema.dat
@@ -373,7 +373,7 @@ column * excluirTuplaBuffer(tp_buffer *buffer, tp_table *campos, struct fs_objec
 /  Natan J. Mai, Ricardo Zanuzzo e Rogério Torchelsen                                          */
 
 /**/
-tp_buffer *join(rc_select *select);
+void join(rc_select *select);
 
 void imprime(rc_select *GLOBAL_DATA_SELECT,rc_parser *GLOBAL_PARSER );
 /* ----------------------------------------------------------------------------------------------
