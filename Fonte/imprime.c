@@ -11,7 +11,7 @@
 void imprime(rc_select *GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
   
    
-    	int j, k,erro, x, p, cont=0;
+    	int j, k,erro, x, y, yy, p, cont=0;
     	struct fs_objects objeto, objetoJ;
 	tp_table *esquemaJ = NULL;
 	tp_buffer *bufferpollJ = NULL;
@@ -133,7 +133,8 @@ void imprime(rc_select *GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
 			p = 0;
 			while(x){
 			//aqui deve ser carregado as tuplas com as clasulas do where passar o rc select pra carregar a pagina
-			//creio que seja a melhor forma pois ai só tera as tuplas das projeções e não precisa mexer drasticamente a função imprime, pois para baixo é apenas printfs
+			//creio que seja a melhor forma pois ai só tera as tuplas das projeções e não precisa mexer drasticamente a função imprime, 
+			//pois para baixo é apenas printfs
 	    			column *pagina = getPage(bufferpoll, esquema, objeto, p);
 	
 	    			if(pagina == ERRO_PARAMETRO){
@@ -238,10 +239,82 @@ void imprime(rc_select *GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
      	   	return;
     		}
 
+		erro = SUCCESS;
+		for(y = 0; erro == SUCCESS; y++)
+        		erro = colocaTuplaBuffer(bufferpollJ, y, esquemaJ, objetoJ);
+		
+		while(x){
+			column *pagina = getPage(bufferpoll, esquema, objeto, p);
+   			if(pagina == ERRO_PARAMETRO){
+         			printf("ERROR: could not open the table.\n");
+         			free(bufferpoll);
+         			free(esquema);
+         			return;
+    			}
+			
 	}
 	
     	free(bufferpoll);
     	free(esquema);
 	free(bufferpollJ);
     	free(esquemaJ);
+}
+
+void printJoin(tp_buffer *bufferpoll, tp_table *s)
+{
+	column *pagina;
+	int column_count = schema_column_count(s), p = 0, j, cont = 0, ntuples = 0;
+  
+	do {
+		pagina = getBufferPage(bufferpoll, s, p);
+
+		if (pagina == NULL) 
+			return;
+   
+		if(pagina == ERRO_PARAMETRO){
+			printf("ERROR: could not open the table.\n");
+			return;
+		}
+
+		if(!cont) {
+			for(j=0; j < column_count; j++){
+				if(pagina[j].tipoCampo == 'S')
+					printf(" %-20s ", pagina[j].nomeCampo);
+				else
+					printf(" %-10s ", pagina[j].nomeCampo);
+
+				if(j<column_count-1)
+					printf("|");
+			}
+			printf("\n");
+			for(j=0; j < column_count; j++){
+				printf("%s",(pagina[j].tipoCampo == 'S')? "----------------------": "------------");
+				if(j<column_count-1)
+					printf("+");
+			}
+			printf("\n");
+		}
+		cont++;
+		for(j=0; j < column_count*bufferpoll[p].nrec; j++){
+			if(pagina[j].tipoCampo == 'S')
+				printf(" %-20s ", pagina[j].valorCampo);
+			else if(pagina[j].tipoCampo == 'I'){
+				int *n = (int *)&pagina[j].valorCampo[0];
+				printf(" %-10d ", *n);
+			} else if(pagina[j].tipoCampo == 'C'){
+				printf(" %-10c ", pagina[j].valorCampo[0]);
+			} else if(pagina[j].tipoCampo == 'D'){
+				double *n = (double *)&pagina[j].valorCampo[0];
+				printf(" %-10f ", *n);
+			}
+			if(j>=1 && ((j+1)%column_count)==0)
+				printf("\n");
+			else
+				printf("|");
+		}
+
+		p++;
+	} while(pagina != NULL);
+  
+	printf("\n(%d %s)\n\n",ntuples,(1>=ntuples)?"row": "rows");
 }
