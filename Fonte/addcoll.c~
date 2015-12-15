@@ -1,0 +1,13 @@
+#include "buffend.h"
+void addcoll(int cont; int cont, column *pagina, column *colunaT, int nrec, int qtdcampos){
+	if(!colunas)
+	    column *colunas = (column *)malloc(sizeof(column)*qtdcampos*(nrec)); //Aloca a quantidade de campos necessária
+
+	memset(colunas, 0, sizeof(column)*qtdcampo*(nrec));
+	colunas[cont].valorCampo = (char *)malloc(sizeof(char)* sizeof(pagina[ipos].valorCampo));
+	memset(colunas[cont].valorCampo, '\0', sizeof(pagina[ipos].valorCampo));
+	colunas[cont].tipoCampo = pagina[ipos].tipo;
+	strcpy(colunas[cont].nomeCampo, pagina[ipos].nome);
+	colunas[h].valorCampo[0] = pagina[ipos].valorCampo;
+	colunas[h].valorCampo[0] = '\0';
+}

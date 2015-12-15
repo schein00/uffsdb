@@ -48,8 +48,8 @@ void imprime(rc_select *GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
 	erro = SUCCESS;
 
 
-	if(GLOBAL_PARSER->col_count == 0 && GLOBAL_PARSER->col_test_count == 0){
-
+	if(GLOBAL_DATA_SELECT->nColumn == 0){
+	 printf("**\n");
  	int ntuples = --x;
 	p = 0;
 	while(x){
@@ -80,10 +80,10 @@ void imprime(rc_select *GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
 	        printf("\n");
 	    }
 	    cont++;
-		int podeImprimi = 0, aux = 0;
+		int podeImprimi = 0,aux =0;
 
 				
-
+		
 		for(k = 0; k < bufferpoll[p].nrec; k++){
 		if(GLOBAL_DATA_SELECT->where != NULL){
 			for(j=0; j < objeto.qtdCampos && podeImprimi != 1; j++){
@@ -92,7 +92,8 @@ void imprime(rc_select *GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
 		}
 	
 		if(podeImprimi == 0){
-			for(j=0; j < objeto.qtdCampos; j++){
+			for(j=0; j < objeto.qtdCampos ; j++){
+
    	     	if(pagina[j + aux].tipoCampo == 'S')
    		         	printf(" %-20s ", pagina[j + aux].valorCampo);
    	     	else if(pagina[j + aux].tipoCampo == 'I'){
@@ -104,14 +105,15 @@ void imprime(rc_select *GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
             		double *n = (double *)&pagina[j + aux].valorCampo[0];
     	        		printf(" %-10f ", *n);
         		}
-            	if(j>= 1 && (( (j)+ 1 )%objeto.qtdCampos)==0)
+		
+            	if(objeto.qtdCampos==j+1)
             		printf("\n");
         		else
         			printf("|");
 		}    	
 	}
 	podeImprimi = 0; 
-	aux += 6;
+	aux += objeto.qtdCampos;
    	}
 	x-=bufferpoll[p++].nrec;
 	}
@@ -133,53 +135,71 @@ void imprime(rc_select *GLOBAL_DATA_SELECT, rc_parser *GLOBAL_PARSER) {
             return;
 	    }
 	    int z;
+	   
 	    if(!cont) {
-	        for(j=0; j < GLOBAL_PARSER->col_count ; j++){
+	        for(j=0; j < GLOBAL_DATA_SELECT->nColumn ; j++){
 		  	for(z=0; z < objeto.qtdCampos; z++)  {
 			
 		    if(strcmp(GLOBAL_DATA_SELECT->columnName[j],pagina[z].nomeCampo)==0){ 
-	            	if(pagina[j].tipoCampo == 'S')
+	            	
+			if(pagina[j].tipoCampo == 'S')
 	                printf(" %-20s ", pagina[z].nomeCampo);
 	        	else
 	                printf(" %-10s ", pagina[z].nomeCampo);
-	            if(j< GLOBAL_PARSER->col_count-1)
+	            if(j< GLOBAL_DATA_SELECT->nColumn-1)
 	            	printf("|");
 	        }}}
 	        printf("\n");
-	        for(j=0; j < GLOBAL_PARSER->col_count ; j++){
+	        for(j=0; j < GLOBAL_DATA_SELECT->nColumn ; j++){
 	            printf("%s",(pagina[j].tipoCampo == 'S')? "----------------------": "------------");
-	            if(j<GLOBAL_PARSER->col_count-1)
+	            if(j<GLOBAL_DATA_SELECT->nColumn-1)
 	            	printf("+");
 	        }
 	        printf("\n");
 	    }
 	    cont++;
 	
-		for(j=0; j < GLOBAL_PARSER->col_count  ; j++){
-			for(z=0; z < objeto.qtdCampos*bufferpoll[p].nrec; z++){
-			
-				if(strcmp(GLOBAL_DATA_SELECT->columnName[j],pagina[z].nomeCampo)==0){
+		int podeImprimi = 0, aux = 0;
+
+				
+
+		for(k = 0; k < bufferpoll[p].nrec; k++){
+		if(GLOBAL_DATA_SELECT->where != NULL){
+			for(j=0; j < objeto.qtdCampos && podeImprimi != 1; j++){
+				podeImprimi = verificaWhere(GLOBAL_DATA_SELECT, pagina, j + aux);
+			}
+		}
 		
-        				if(pagina[z].tipoCampo == 'S')
-          			  	printf(" %-20s ", pagina[z].valorCampo);
-        				else if(pagina[z].tipoCampo == 'I'){
-          			  	int *n = (int *)&pagina[z].valorCampo[0];
-          			  	printf(" %-10d ", *n);
-        				} else if(pagina[z].tipoCampo == 'C'){
-          			  	printf(" %-10c ", pagina[z].valorCampo[0]);
-        				} else if(pagina[z].tipoCampo == 'D'){
-         				   	double *n = (double *)&pagina[z].valorCampo[0];
-    	    				    printf(" %-10f ", *n);
-					} 
-		
-         				if(GLOBAL_PARSER->col_count>1 && (z%GLOBAL_PARSER->col_count)==0)
-            				printf("|");
-        				else
-        					printf("\n");
-				}
-    			}
-		} 
-   	x-=bufferpoll[p++].nrec;
+		if(podeImprimi == 0){
+			for(z=0; z < GLOBAL_DATA_SELECT->nColumn ; z++){
+			for(j=0; j < objeto.qtdCampos  ; j++){
+			 
+			// printf("j : %d\n",j);
+			/// printf("z : %d\n",z);
+			if(strcmp(GLOBAL_DATA_SELECT->columnName[z],pagina[j].nomeCampo)==0){
+   	     	if(pagina[j + aux].tipoCampo == 'S')
+   		         	printf(" %-20s ", pagina[j + aux].valorCampo);
+   	     	else if(pagina[j + aux].tipoCampo == 'I'){
+   		         	int *n = (int *)&pagina[j + aux].valorCampo[0];
+   		         	printf(" %-10d ", *n);
+   	     	} else if(pagina[j + aux].tipoCampo == 'C'){
+   		         	printf(" %-10c ", pagina[j + aux].valorCampo[0]);
+   	     	} else if(pagina[j + aux].tipoCampo == 'D'){
+            		double *n = (double *)&pagina[j + aux].valorCampo[0];
+    	        		printf(" %-10f ", *n);
+        		}
+
+            	if(GLOBAL_DATA_SELECT->nColumn==(z+1))
+            		printf("\n");
+        		else
+        			printf("|");
+		}    }}	
+	}
+	podeImprimi = 0; 
+	aux += objeto.qtdCampos;
+   	}
+	x-=bufferpoll[p++].nrec;
+   	
     	}
     	printf("\n(%d %s)\n\n",ntuples,(1>=ntuples)?"row": "rows");
     }
