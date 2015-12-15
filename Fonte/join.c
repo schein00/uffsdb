@@ -1,7 +1,7 @@
 #include "buffend.h"
 
 
-tp_buffer *join(rc_select *select){
+void join(rc_select *select){
 	/*int x, y;	
 
 	if((!verificaNomeTabela(select->objName)) || (!verificaNomeTabela(select->join->table))){

@@ -373,7 +373,7 @@ column * excluirTuplaBuffer(tp_buffer *buffer, tp_table *campos, struct fs_objec
 /  Natan J. Mai, Ricardo Zanuzzo e Rogério Torchelsen                                          */
 
 /**/
-tp_buffer *join(rc_select *select);
+void join(rc_select *select);
 
 void imprime(rc_select *GLOBAL_DATA_SELECT,rc_parser *GLOBAL_PARSER );
 /* ----------------------------------------------------------------------------------------------
